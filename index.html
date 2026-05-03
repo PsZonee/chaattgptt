@@ -98,55 +98,59 @@
         .message-role { font-weight: 600; margin-bottom: 4px; }
         .message-text { font-size: 16px; line-height: 1.7; color: #2d2d2d; white-space: pre-wrap; }
 
-        /* Action buttons – icon only, with tooltips */
-        .message-actions {
-            display: flex; align-items: center; gap: 4px; margin-top: 10px;
-        }
+        /* Action buttons – icon only */
+        .message-actions { display: flex; align-items: center; gap: 4px; margin-top: 10px; }
         .icon-btn {
             width: 32px; height: 32px; border-radius: 6px;
             background: none; border: none; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             color: #6b6b6b; transition: background 0.2s, color 0.2s;
-            position: relative;
         }
         .icon-btn:hover { background: #f0f0f0; color: #1a1a1a; }
         .icon-btn svg { width: 18px; height: 18px; }
-        /* Tooltip on hover */
-        .icon-btn::after {
-            content: attr(aria-label);
-            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-            background: #333; color: #fff; padding: 4px 8px; border-radius: 6px;
-            font-size: 12px; white-space: nowrap; opacity: 0;
-            pointer-events: none; transition: opacity 0.2s;
-            margin-bottom: 6px;
-        }
-        .icon-btn:hover::after { opacity: 1; }
 
         /* Input area */
         .input-area { padding: 12px 24px 24px; background: linear-gradient(transparent 0%, #fff 20%); }
         @media (max-width: 768px) { .input-area { padding: 8px 16px 20px; } }
         .input-box {
-            display: flex; align-items: flex-end; gap: 8px;
+            display: flex; align-items: flex-end; gap: 6px;
             background: #fff; border: 1px solid #d1d5db;
-            border-radius: 24px; padding: 6px 8px 6px 16px;
+            border-radius: 24px; padding: 4px 6px 4px 12px;
             box-shadow: var(--shadow);
         }
+        .attach-btn {
+            background: none; border: none; padding: 8px;
+            border-radius: 8px; cursor: pointer; color: #6b6b6b;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .attach-btn:hover { background: #f0f0f0; }
+        .attach-btn svg { width: 20px; height: 20px; }
         .input-box textarea {
             flex: 1; border: none; outline: none; resize: none;
             font-size: 16px; font-family: inherit; padding: 4px 0;
             min-height: 28px; max-height: 200px;
         }
+        .mic-btn {
+            background: none; border: none; padding: 8px;
+            border-radius: 50%; cursor: pointer; color: #6b6b6b;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mic-btn:hover { background: #f0f0f0; }
+        .mic-btn svg { width: 20px; height: 20px; }
         .send-btn {
             width: 34px; height: 34px; border-radius: 50%;
             background: var(--accent); color: #fff; border: none;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, transform 0.1s;
         }
-        .send-btn:disabled { background: #d1d5db; }
+        .send-btn:disabled { background: #d1d5db; pointer-events: none; }
+        .send-btn:active:not(:disabled) { transform: scale(0.94); }
+        .send-btn svg { width: 18px; height: 18px; transform: translateX(1px); }
         .input-footer { text-align: center; color: #9e9e9e; font-size: 11px; margin-top: 8px; }
     </style>
 </head>
 <body>
-    <!-- Login Overlay -->
+    <!-- Login -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-card">
             <h2>🔐 ChatGPT</h2>
@@ -209,18 +213,31 @@
                 <div class="messages-wrapper" id="messagesWrapper"></div>
             </div>
 
-            <!-- User Input -->
+            <!-- USER INPUT AREA (for user role) -->
             <div class="input-area" id="userInputArea" style="display:none;">
                 <div class="input-box">
+                    <button class="attach-btn" id="attachBtnUser" title="Attach file">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                    </button>
                     <textarea id="userInput" placeholder="Message ChatGPT..." rows="1"></textarea>
-                    <button class="send-btn" id="sendBtn" disabled>
+                    <button class="mic-btn" id="micBtnUser" title="Voice input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                            <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                    </button>
+                    <button class="send-btn" id="sendBtnUser" style="display:none;" disabled>
                         <svg viewBox="0 0 24 24" fill="currentColor" width="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                     </button>
                 </div>
                 <p class="input-footer">ChatGPT can make mistakes. Check important info.</p>
             </div>
 
-            <!-- Admin Reply Area (always visible for admin) -->
+            <!-- ADMIN REPLY AREA (for admin role) -->
             <div class="input-area" id="adminReplyArea" style="display:none;">
                 <div class="input-box">
                     <textarea id="adminReplyInput" placeholder="Reply as ChatGPT..." rows="1"></textarea>
@@ -283,12 +300,13 @@
                 appendMessage(msg);
             });
 
-            // Suggestions (user only)
+            // Suggestion cards (user only)
             document.querySelectorAll('.suggestion-card').forEach(card => {
                 card.addEventListener('click', () => {
                     if (role === 'user') {
                         document.getElementById('userInput').value = card.dataset.prompt;
-                        document.getElementById('sendBtn').disabled = false;
+                        // Trigger input event to toggle buttons
+                        document.getElementById('userInput').dispatchEvent(new Event('input'));
                     }
                 });
             });
@@ -343,21 +361,47 @@
             document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
         }
 
-        // User input
+        // User input with mic toggle
         function setupUserInput() {
-            const input = document.getElementById('userInput');
-            const btn = document.getElementById('sendBtn');
-            btn.addEventListener('click', () => {
-                const text = input.value.trim();
+            const textarea = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtnUser');
+            const micBtn = document.getElementById('micBtnUser');
+            const attachBtn = document.getElementById('attachBtnUser');
+
+            // Attach button action
+            attachBtn.addEventListener('click', () => {
+                alert('File upload is not available in this demo.');
+            });
+
+            // Mic button action
+            micBtn.addEventListener('click', () => {
+                alert('Voice input is not available in this demo.');
+            });
+
+            // Toggle send/mic based on input
+            textarea.addEventListener('input', () => {
+                const hasText = textarea.value.trim().length > 0;
+                sendBtn.style.display = hasText ? 'flex' : 'none';
+                micBtn.style.display = hasText ? 'none' : 'flex';
+                sendBtn.disabled = !hasText;
+            });
+
+            // Send message
+            sendBtn.addEventListener('click', () => {
+                const text = textarea.value.trim();
                 if (!text) return;
                 messagesRef.push({ role: 'user', content: text, timestamp: firebase.database.ServerValue.TIMESTAMP });
-                input.value = '';
-                btn.disabled = true;
+                textarea.value = '';
+                // Trigger input event to reset to mic
+                textarea.dispatchEvent(new Event('input'));
             });
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); btn.click(); }
+
+            textarea.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendBtn.click();
+                }
             });
-            input.addEventListener('input', () => btn.disabled = !input.value.trim());
         }
 
         // Admin reply
