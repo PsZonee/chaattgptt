@@ -13,14 +13,14 @@
             --input-border: #d1d5db;
             --shadow: 0 0 15px rgba(0,0,0,0.06);
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             height: 100vh; display: flex; background: var(--main-bg);
             color: var(--text-primary); overflow: hidden;
         }
 
-        /* Login overlay */
+        /* Login */
         .login-overlay {
             position: fixed; inset: 0; background: #fff; z-index: 1000;
             display: flex; align-items: center; justify-content: center;
@@ -31,76 +31,122 @@
             text-align: center; width: 90%; max-width: 360px;
         }
         .login-card h2 { margin-bottom: 20px; }
-        .login-card input { width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; margin-bottom:12px; }
-        .login-card button { width:100%; padding:12px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-weight:600; cursor:pointer; }
-        .error-msg { color:red; margin-top:8px; }
+        .login-card input {
+            width: 100%; padding: 12px; border: 1px solid #d1d5db;
+            border-radius: 10px; margin-bottom: 12px;
+        }
+        .login-card button {
+            width: 100%; padding: 12px; background: var(--accent);
+            color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;
+        }
+        .error-msg { color: red; margin-top: 8px; }
 
         /* Sidebar */
         .sidebar {
-            width:260px; min-width:260px; background:var(--sidebar-bg);
-            display:flex; flex-direction:column; height:100vh; color:#ececec;
-            z-index:30; transition:transform 0.3s;
+            width: 260px; min-width: 260px; background: var(--sidebar-bg);
+            display: flex; flex-direction: column; height: 100vh;
+            color: #ececec; z-index: 30;
+            transition: transform 0.3s cubic-bezier(0.25,0.8,0.25,1);
         }
-        @media (max-width:768px) {
-            .sidebar { position:fixed; left:0; top:0; bottom:0; transform:translateX(-100%); }
-            .sidebar.open { transform:translateX(0); box-shadow:4px 0 20px rgba(0,0,0,0.3); }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left:0; top:0; bottom:0; transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
         }
-        .sidebar-header { padding:12px 16px; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); }
-        .sidebar-header h2 { font-size:16px; font-weight:600; }
-        .close-sidebar-btn { background:none; border:none; color:#b4b4b4; font-size:20px; cursor:pointer; display:none; }
-        @media (max-width:768px) { .close-sidebar-btn { display:block; } }
-        .new-chat-btn { margin:12px; padding:12px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:#ececec; display:flex; align-items:center; gap:12px; cursor:pointer; }
-        .chat-history { flex:1; overflow-y:auto; padding:8px 12px; }
-        .sidebar-footer { padding:12px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:10px; color:#b4b4b4; }
-        .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:25; }
-        .sidebar-overlay.show { display:block; }
+        .sidebar-header { padding: 12px 16px; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-header h2 { font-size: 16px; font-weight: 600; }
+        .close-sidebar-btn { background: none; border: none; color: #b4b4b4; font-size: 20px; cursor: pointer; display: none; }
+        @media (max-width: 768px) { .close-sidebar-btn { display: block; } }
+        .new-chat-btn {
+            margin: 12px; padding: 12px 16px; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent; color: #ececec;
+            display: flex; align-items: center; gap: 12px; cursor: pointer;
+        }
+        .chat-history { flex: 1; overflow-y: auto; padding: 8px 12px; }
+        .sidebar-footer { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; color: #b4b4b4; }
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 25; }
+        .sidebar-overlay.show { display: block; }
 
         /* Main */
-        .main { flex:1; display:flex; flex-direction:column; height:100vh; }
-        .top-bar { display:flex; align-items:center; padding:0 16px; height:56px; border-bottom:1px solid #e5e5e5; background:#fff; gap:12px; }
-        @media (max-width:768px) { .top-bar { height:48px; } }
-        .menu-btn { background:none; border:none; cursor:pointer; padding:6px; }
-        .menu-btn svg { width:24px; height:24px; }
-        .model-selector { display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; }
-        .top-bar-right { margin-left:auto; }
+        .main { flex: 1; display: flex; flex-direction: column; height: 100vh; }
+        .top-bar { display: flex; align-items: center; padding: 0 16px; height: 56px; border-bottom: 1px solid #e5e5e5; background: #fff; gap: 12px; }
+        @media (max-width: 768px) { .top-bar { height: 48px; } }
+        .menu-btn { background: none; border: none; cursor: pointer; padding: 6px; }
+        .menu-btn svg { width: 24px; height: 24px; }
+        .model-selector { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .top-bar-right { margin-left: auto; }
 
-        /* Chat container */
-        .chat-container { flex:1; overflow-y:auto; }
-        .welcome-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:20px; }
-        .welcome-screen.hidden { display:none; }
-        .welcome-heading { font-size:28px; font-weight:600; margin-bottom:8px; }
-        .welcome-subtitle { color:#6b6b6b; font-size:16px; margin-bottom:32px; }
-        .suggestion-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; max-width:540px; width:100%; }
-        .suggestion-card { padding:16px; border:1px solid #e5e5e5; border-radius:12px; cursor:pointer; }
-        .suggestion-card .emoji { font-size:24px; display:block; margin-bottom:8px; }
+        /* Chat */
+        .chat-container { flex: 1; overflow-y: auto; }
+        .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 20px; }
+        .welcome-screen.hidden { display: none; }
+        .welcome-heading { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+        .welcome-subtitle { color: #6b6b6b; font-size: 16px; margin-bottom: 32px; }
+        .suggestion-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; max-width: 540px; width: 100%; }
+        .suggestion-card { padding: 16px; border: 1px solid #e5e5e5; border-radius: 12px; cursor: pointer; }
+        .suggestion-card .emoji { font-size: 24px; display: block; margin-bottom: 8px; }
 
         /* Messages */
-        .messages-wrapper { max-width:768px; margin:0 auto; padding:0 24px; }
-        .message { display:flex; gap:16px; padding:24px 0; border-bottom:1px solid #f0f0f0; animation:fadeIn 0.3s; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
-        .message-avatar { width:30px; height:30px; border-radius:4px; background:#e8e8e8; display:flex; align-items:center; justify-content:center; }
-        .message.assistant .message-avatar { background:var(--accent); }
-        .message-avatar svg { width:18px; height:18px; }
-        .message-content { flex:1; }
-        .message-role { font-weight:600; margin-bottom:4px; }
-        .message-text { font-size:16px; line-height:1.7; color:#2d2d2d; white-space:pre-wrap; }
+        .messages-wrapper { max-width: 768px; margin: 0 auto; padding: 0 24px; }
+        @media (max-width: 768px) { .messages-wrapper { padding: 0 16px; } }
+        .message { display: flex; gap: 16px; padding: 24px 0; border-bottom: 1px solid #f0f0f0; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+        .message-avatar { width: 30px; height: 30px; border-radius: 4px; background: #e8e8e8; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .message.assistant .message-avatar { background: var(--accent); }
+        .message-avatar svg { width: 18px; height: 18px; }
+        .message-content { flex: 1; min-width: 0; }
+        .message-role { font-weight: 600; margin-bottom: 4px; }
+        .message-text { font-size: 16px; line-height: 1.7; color: #2d2d2d; white-space: pre-wrap; }
 
-        /* Action buttons */
-        .message-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-        .action-btn { background:none; border:none; padding:6px 10px; border-radius:6px; font-size:13px; color:#6b6b6b; display:flex; align-items:center; gap:4px; cursor:pointer; }
-        .action-btn:hover { background:#f0f0f0; }
+        /* Action buttons – icon only, with tooltips */
+        .message-actions {
+            display: flex; align-items: center; gap: 4px; margin-top: 10px;
+        }
+        .icon-btn {
+            width: 32px; height: 32px; border-radius: 6px;
+            background: none; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #6b6b6b; transition: background 0.2s, color 0.2s;
+            position: relative;
+        }
+        .icon-btn:hover { background: #f0f0f0; color: #1a1a1a; }
+        .icon-btn svg { width: 18px; height: 18px; }
+        /* Tooltip on hover */
+        .icon-btn::after {
+            content: attr(aria-label);
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 4px 8px; border-radius: 6px;
+            font-size: 12px; white-space: nowrap; opacity: 0;
+            pointer-events: none; transition: opacity 0.2s;
+            margin-bottom: 6px;
+        }
+        .icon-btn:hover::after { opacity: 1; }
 
-        /* Input areas */
-        .input-area { padding:12px 24px 24px; background:linear-gradient(transparent 0%, #fff 20%); }
-        .input-box { display:flex; align-items:flex-end; gap:8px; background:#fff; border:1px solid #d1d5db; border-radius:24px; padding:6px 8px 6px 16px; box-shadow:var(--shadow); }
-        .input-box textarea { flex:1; border:none; outline:none; resize:none; font-size:16px; font-family:inherit; padding:4px 0; }
-        .send-btn { width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-        .send-btn:disabled { background:#d1d5db; }
-        .input-footer { text-align:center; color:#9e9e9e; font-size:11px; margin-top:8px; }
+        /* Input area */
+        .input-area { padding: 12px 24px 24px; background: linear-gradient(transparent 0%, #fff 20%); }
+        @media (max-width: 768px) { .input-area { padding: 8px 16px 20px; } }
+        .input-box {
+            display: flex; align-items: flex-end; gap: 8px;
+            background: #fff; border: 1px solid #d1d5db;
+            border-radius: 24px; padding: 6px 8px 6px 16px;
+            box-shadow: var(--shadow);
+        }
+        .input-box textarea {
+            flex: 1; border: none; outline: none; resize: none;
+            font-size: 16px; font-family: inherit; padding: 4px 0;
+            min-height: 28px; max-height: 200px;
+        }
+        .send-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--accent); color: #fff; border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .send-btn:disabled { background: #d1d5db; }
+        .input-footer { text-align: center; color: #9e9e9e; font-size: 11px; margin-top: 8px; }
     </style>
 </head>
 <body>
-    <!-- Login -->
+    <!-- Login Overlay -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-card">
             <h2>🔐 ChatGPT</h2>
@@ -110,8 +156,8 @@
         </div>
     </div>
 
-    <!-- App -->
-    <div id="app" style="display:none; flex:1;">
+    <!-- Main App -->
+    <div id="app" style="display:none; flex:1; display:flex;">
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -121,7 +167,7 @@
             <button class="new-chat-btn" id="newChatBtn">
                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New chat
             </button>
-            <div class="chat-history"></div>
+            <div class="chat-history" id="chatHistory"></div>
             <div class="sidebar-footer">
                 <div style="width:28px;height:28px;border-radius:50%;background:#4a4a4a;display:flex;align-items:center;justify-content:center;font-size:14px;">U</div>
                 Upgrade plan
@@ -130,9 +176,15 @@
 
         <main class="main">
             <div class="top-bar">
-                <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+                <button class="menu-btn" id="menuBtn">
+                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
                 <div class="model-selector"><span>ChatGPT</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg></div>
-                <div class="top-bar-right"><button class="new-chat-btn" id="topNewChatBtn"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+                <div class="top-bar-right">
+                    <button class="new-chat-btn" id="topNewChatBtn">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                </div>
             </div>
 
             <div class="chat-container" id="chatContainer">
@@ -140,29 +192,41 @@
                     <h1 class="welcome-heading">Hi again 😊</h1>
                     <p class="welcome-subtitle">What do you want to dive into today?</p>
                     <div class="suggestion-grid">
-                        <div class="suggestion-card" data-prompt="Write a Python script for automation"><span class="emoji">🐍</span><strong>Code help</strong><br>Write a Python script for automation</div>
-                        <div class="suggestion-card" data-prompt="Explain black holes in simple terms"><span class="emoji">🌌</span><strong>Learn something</strong><br>Explain black holes in simple terms</div>
-                        <div class="suggestion-card" data-prompt="Draft a polite email to decline a meeting invite"><span class="emoji">✉️</span><strong>Write & edit</strong><br>Draft a polite email to decline a meeting invite</div>
-                        <div class="suggestion-card" data-prompt="Give me a 7‑day meal plan for a vegetarian diet"><span class="emoji">🥗</span><strong>Plan & organize</strong><br>Give me a 7‑day meal plan for a vegetarian diet</div>
+                        <div class="suggestion-card" data-prompt="Write a Python script for automation">
+                            <span class="emoji">🐍</span><strong>Code help</strong><br>Write a Python script for automation
+                        </div>
+                        <div class="suggestion-card" data-prompt="Explain black holes in simple terms">
+                            <span class="emoji">🌌</span><strong>Learn something</strong><br>Explain black holes in simple terms
+                        </div>
+                        <div class="suggestion-card" data-prompt="Draft a polite email to decline a meeting invite">
+                            <span class="emoji">✉️</span><strong>Write & edit</strong><br>Draft a polite email to decline a meeting invite
+                        </div>
+                        <div class="suggestion-card" data-prompt="Give me a 7‑day meal plan for a vegetarian diet">
+                            <span class="emoji">🥗</span><strong>Plan & organize</strong><br>Give me a 7‑day meal plan for a vegetarian diet
+                        </div>
                     </div>
                 </div>
                 <div class="messages-wrapper" id="messagesWrapper"></div>
             </div>
 
-            <!-- USER INPUT (shown for user) -->
+            <!-- User Input -->
             <div class="input-area" id="userInputArea" style="display:none;">
                 <div class="input-box">
                     <textarea id="userInput" placeholder="Message ChatGPT..." rows="1"></textarea>
-                    <button class="send-btn" id="sendBtn" disabled><svg viewBox="0 0 24 24" fill="currentColor" width="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+                    <button class="send-btn" id="sendBtn" disabled>
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    </button>
                 </div>
                 <p class="input-footer">ChatGPT can make mistakes. Check important info.</p>
             </div>
 
-            <!-- ADMIN REPLY AREA (shown for admin) -->
+            <!-- Admin Reply Area (always visible for admin) -->
             <div class="input-area" id="adminReplyArea" style="display:none;">
                 <div class="input-box">
                     <textarea id="adminReplyInput" placeholder="Reply as ChatGPT..." rows="1"></textarea>
-                    <button class="send-btn" id="adminSendBtn"><svg viewBox="0 0 24 24" fill="currentColor" width="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+                    <button class="send-btn" id="adminSendBtn">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    </button>
                 </div>
                 <p class="input-footer">You are replying as ChatGPT</p>
             </div>
@@ -203,7 +267,6 @@
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
 
-            // Show correct input
             if (role === 'user') {
                 document.getElementById('userInputArea').style.display = 'block';
                 document.getElementById('adminReplyArea').style.display = 'none';
@@ -214,13 +277,13 @@
                 setupAdminReply();
             }
 
-            // Listen for messages
+            // Real-time messages
             messagesRef.on('child_added', snap => {
                 const msg = snap.val();
                 appendMessage(msg);
             });
 
-            // Suggestion cards (only for user)
+            // Suggestions (user only)
             document.querySelectorAll('.suggestion-card').forEach(card => {
                 card.addEventListener('click', () => {
                     if (role === 'user') {
@@ -231,7 +294,7 @@
             });
         }
 
-        // Render message with action buttons for assistant
+        // Add message with icon action buttons
         function appendMessage({ role: msgRole, content }) {
             document.getElementById('welcomeScreen').classList.add('hidden');
             const div = document.createElement('div');
@@ -248,19 +311,31 @@
                 </div>`;
             document.getElementById('messagesWrapper').appendChild(div);
 
+            // Action icons for assistant messages
             if (msgRole === 'assistant') {
-                const actions = document.createElement('div');
-                actions.className = 'message-actions';
-                actions.innerHTML = `
-                    <button class="action-btn">👍 Good response</button>
-                    <button class="action-btn">👎 Bad response</button>
-                    <button class="action-btn copy-btn">📋 Copy</button>
-                    <button class="action-btn">🔄 Try again</button>
-                    <button class="action-btn">⚙️ More</button>`;
-                div.querySelector('.message-content').appendChild(actions);
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'message-actions';
+                actionsDiv.innerHTML = `
+                    <button class="icon-btn" aria-label="Good response">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
+                    </button>
+                    <button class="icon-btn" aria-label="Bad response">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 001.96 2.3H10zM17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/></svg>
+                    </button>
+                    <button class="icon-btn" aria-label="Copy">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    </button>
+                    <button class="icon-btn" aria-label="Try again">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                    </button>
+                    <button class="icon-btn" aria-label="More actions">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                    </button>
+                `;
+                div.querySelector('.message-content').appendChild(actionsDiv);
 
                 // Copy functionality
-                actions.querySelector('.copy-btn').addEventListener('click', () => {
+                actionsDiv.querySelector('[aria-label="Copy"]').addEventListener('click', () => {
                     navigator.clipboard.writeText(content).then(() => alert('Copied!'));
                 });
             }
@@ -268,7 +343,7 @@
             document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
         }
 
-        // User sends message
+        // User input
         function setupUserInput() {
             const input = document.getElementById('userInput');
             const btn = document.getElementById('sendBtn');
@@ -285,7 +360,7 @@
             input.addEventListener('input', () => btn.disabled = !input.value.trim());
         }
 
-        // Admin sends reply
+        // Admin reply
         function setupAdminReply() {
             const input = document.getElementById('adminReplyInput');
             const btn = document.getElementById('adminSendBtn');
@@ -301,10 +376,14 @@
         }
 
         // Sidebar & new chat
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('open'); 
+            document.getElementById('sidebarOverlay').classList.toggle('show'); 
+        }
         document.getElementById('menuBtn').addEventListener('click', toggleSidebar);
         document.getElementById('closeSidebarBtn').addEventListener('click', toggleSidebar);
         document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+
         function clearChat() {
             messagesRef.remove();
             document.getElementById('messagesWrapper').innerHTML = '';
