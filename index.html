@@ -7,15 +7,9 @@
     <style>
         :root {
             --sidebar-bg: #171717;
-            --sidebar-hover: #2a2a2a;
-            --sidebar-active: #343434;
             --main-bg: #ffffff;
             --text-primary: #1a1a1a;
-            --text-secondary: #6b6b6b;
-            --text-sidebar: #ececec;
-            --border-light: #e5e5e5;
             --accent: #10a37f;
-            --accent-hover: #0d8c6d;
             --input-border: #d1d5db;
             --shadow: 0 0 15px rgba(0,0,0,0.06);
         }
@@ -26,7 +20,7 @@
             color: var(--text-primary); overflow: hidden;
         }
 
-        /* ── Login Overlay ── */
+        /* Login overlay */
         .login-overlay {
             position: fixed; inset: 0; background: #fff; z-index: 1000;
             display: flex; align-items: center; justify-content: center;
@@ -36,224 +30,77 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.12);
             text-align: center; width: 90%; max-width: 360px;
         }
-        .login-card h2 { margin-bottom: 20px; font-size: 24px; }
-        .login-card input {
-            width: 100%; padding: 12px; border: 1px solid var(--input-border);
-            border-radius: 10px; font-size: 16px; margin-bottom: 12px;
-        }
-        .login-card button {
-            width: 100%; padding: 12px; background: var(--accent);
-            color: #fff; border: none; border-radius: 10px;
-            font-size: 16px; font-weight: 600; cursor: pointer;
-        }
-        .error-msg { color: red; margin-top: 8px; font-size: 14px; }
+        .login-card h2 { margin-bottom: 20px; }
+        .login-card input { width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; margin-bottom:12px; }
+        .login-card button { width:100%; padding:12px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-weight:600; cursor:pointer; }
+        .error-msg { color:red; margin-top:8px; }
 
-        /* ── Sidebar ── */
+        /* Sidebar */
         .sidebar {
-            width: 260px; min-width: 260px; background: var(--sidebar-bg);
-            display: flex; flex-direction: column; height: 100vh;
-            color: var(--text-sidebar); z-index: 30;
-            transition: transform 0.3s cubic-bezier(0.25,0.8,0.25,1);
+            width:260px; min-width:260px; background:var(--sidebar-bg);
+            display:flex; flex-direction:column; height:100vh; color:#ececec;
+            z-index:30; transition:transform 0.3s;
         }
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; left:0; top:0; bottom:0; transform:translateX(-100%); }
-            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
+        @media (max-width:768px) {
+            .sidebar { position:fixed; left:0; top:0; bottom:0; transform:translateX(-100%); }
+            .sidebar.open { transform:translateX(0); box-shadow:4px 0 20px rgba(0,0,0,0.3); }
         }
-        .sidebar-header { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); }
-        .sidebar-header h2 { font-size: 16px; font-weight: 600; color: #fff; letter-spacing: -0.02em; }
-        .close-sidebar-btn { background: none; border: none; color: var(--text-sidebar); cursor: pointer; padding: 6px; border-radius: 8px; display: none; }
-        @media (max-width: 768px) { .close-sidebar-btn { display: flex; } }
-        .close-sidebar-btn:hover { background: var(--sidebar-hover); color:#fff; }
-        .new-chat-btn {
-            display: flex; align-items: center; gap: 12px; margin: 12px;
-            padding: 12px 16px; border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: transparent; color: var(--text-sidebar);
-            font-size: 15px; cursor: pointer; transition: background 0.2s;
-        }
-        .new-chat-btn:hover { background: var(--sidebar-hover); }
-        .new-chat-btn svg { width: 20px; height: 20px; stroke: currentColor; flex-shrink:0; }
-        .chat-history { flex: 1; overflow-y: auto; padding: 8px 12px; }
-        .history-item {
-            padding: 10px 14px; border-radius: 8px; cursor: pointer;
-            font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            margin-bottom: 2px; display: flex; align-items: center; gap: 8px;
-            transition: background 0.15s;
-        }
-        .history-item:hover { background: var(--sidebar-hover); color: var(--text-sidebar); }
-        .sidebar-footer {
-            padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08);
-            display: flex; align-items: center; gap: 10px; font-size: 13px;
-            color: var(--text-secondary); cursor: pointer;
-        }
-        .sidebar-footer:hover { background: var(--sidebar-hover); color: var(--text-sidebar); }
-        .user-avatar-sidebar {
-            width: 28px; height: 28px; border-radius: 50%;
-            background: #4a4a4a; display: flex; align-items: center; justify-content: center;
-            font-size: 14px; color: #fff; flex-shrink:0;
-        }
+        .sidebar-header { padding:12px 16px; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); }
+        .sidebar-header h2 { font-size:16px; font-weight:600; }
+        .close-sidebar-btn { background:none; border:none; color:#b4b4b4; font-size:20px; cursor:pointer; display:none; }
+        @media (max-width:768px) { .close-sidebar-btn { display:block; } }
+        .new-chat-btn { margin:12px; padding:12px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:#ececec; display:flex; align-items:center; gap:12px; cursor:pointer; }
+        .chat-history { flex:1; overflow-y:auto; padding:8px 12px; }
+        .sidebar-footer { padding:12px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:10px; color:#b4b4b4; }
+        .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:25; }
+        .sidebar-overlay.show { display:block; }
 
-        /* ── Main Area ── */
-        .main { flex: 1; display: flex; flex-direction: column; height: 100vh; min-width:0; background: #fff; }
-        .top-bar {
-            display: flex; align-items: center; padding: 0 16px; height: 56px;
-            border-bottom: 1px solid var(--border-light); background: #fff;
-            gap: 12px;
-        }
-        @media (max-width: 768px) { .top-bar { height: 48px; padding: 0 12px; } }
-        .menu-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; display: flex; }
-        .menu-btn:hover { background: #f0f0f0; }
-        .menu-btn svg { width: 24px; height: 24px; }
-        .model-selector {
-            display: flex; align-items: center; gap: 6px; padding: 6px 12px;
-            border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;
-            color: var(--text-primary); background: transparent; transition: background 0.2s;
-        }
-        .model-selector:hover { background: #f0f0f0; }
-        .model-selector svg { width: 16px; height: 16px; }
-        .top-bar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+        /* Main */
+        .main { flex:1; display:flex; flex-direction:column; height:100vh; }
+        .top-bar { display:flex; align-items:center; padding:0 16px; height:56px; border-bottom:1px solid #e5e5e5; background:#fff; gap:12px; }
+        @media (max-width:768px) { .top-bar { height:48px; } }
+        .menu-btn { background:none; border:none; cursor:pointer; padding:6px; }
+        .menu-btn svg { width:24px; height:24px; }
+        .model-selector { display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; }
+        .top-bar-right { margin-left:auto; }
 
-        /* Welcome screen */
-        .chat-container { flex: 1; overflow-y: auto; }
-        .welcome-screen {
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; height: 100%; text-align: center;
-            padding: 20px;
-        }
-        .welcome-screen.hidden { display: none; }
-        .welcome-heading { font-size: 28px; font-weight: 600; margin-bottom: 8px; color: #1a1a1a; }
-        .welcome-subtitle { color: #6b6b6b; font-size: 16px; margin-bottom: 32px; }
-        .suggestion-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-            max-width: 540px; width: 100%;
-        }
-        .suggestion-card {
-            padding: 16px; border: 1px solid var(--border-light);
-            border-radius: 12px; cursor: pointer; text-align: left;
-            background: #fff; transition: background 0.2s;
-        }
-        .suggestion-card:hover { background: #f9f9f9; }
-        .suggestion-card .emoji { font-size: 24px; margin-bottom: 10px; display: block; }
-        .suggestion-card .title { font-weight: 500; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px; }
-        .suggestion-card .desc { font-size: 14px; color: #2d2d2d; line-height: 1.4; }
+        /* Chat container */
+        .chat-container { flex:1; overflow-y:auto; }
+        .welcome-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:20px; }
+        .welcome-screen.hidden { display:none; }
+        .welcome-heading { font-size:28px; font-weight:600; margin-bottom:8px; }
+        .welcome-subtitle { color:#6b6b6b; font-size:16px; margin-bottom:32px; }
+        .suggestion-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; max-width:540px; width:100%; }
+        .suggestion-card { padding:16px; border:1px solid #e5e5e5; border-radius:12px; cursor:pointer; }
+        .suggestion-card .emoji { font-size:24px; display:block; margin-bottom:8px; }
 
         /* Messages */
-        .messages-wrapper { max-width: 768px; margin: 0 auto; padding: 0 24px; }
-        .message {
-            display: flex; gap: 16px; padding: 24px 0;
-            border-bottom: 1px solid #f0f0f0;
-            animation: fadeIn 0.3s ease;
-        }
+        .messages-wrapper { max-width:768px; margin:0 auto; padding:0 24px; }
+        .message { display:flex; gap:16px; padding:24px 0; border-bottom:1px solid #f0f0f0; animation:fadeIn 0.3s; }
         @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
-        .message-avatar {
-            width: 30px; height: 30px; border-radius: 4px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; margin-top: 2px;
-        }
-        .message.user .message-avatar { background: #e8e8e8; }
-        .message.assistant .message-avatar { background: var(--accent); }
-        .message-avatar svg { width: 18px; height: 18px; }
-        .message.user .message-avatar svg { fill: #666; }
-        .message.assistant .message-avatar svg { fill: #fff; }
-        .message-content { flex: 1; min-width:0; }
-        .message-role { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-        .message-text { font-size: 16px; line-height: 1.7; color: #2d2d2d; white-space: pre-wrap; word-break: break-word; }
+        .message-avatar { width:30px; height:30px; border-radius:4px; background:#e8e8e8; display:flex; align-items:center; justify-content:center; }
+        .message.assistant .message-avatar { background:var(--accent); }
+        .message-avatar svg { width:18px; height:18px; }
+        .message-content { flex:1; }
+        .message-role { font-weight:600; margin-bottom:4px; }
+        .message-text { font-size:16px; line-height:1.7; color:#2d2d2d; white-space:pre-wrap; }
 
-        /* Action buttons row (below assistant message) */
-        .message-actions {
-            display: flex; align-items: center; gap: 6px; margin-top: 10px;
-            opacity: 0; transition: opacity 0.2s;
-        }
-        .message:hover .message-actions { opacity: 1; }
-        .action-btn {
-            background: none; border: 1px solid transparent; padding: 5px 8px;
-            border-radius: 6px; cursor: pointer; font-size: 13px;
-            color: #6b6b6b; display: flex; align-items: center; gap: 4px;
-            transition: background 0.2s, color 0.2s;
-        }
-        .action-btn:hover { background: #f0f0f0; color: #1a1a1a; }
-        .action-btn svg { width: 16px; height: 16px; }
-        .action-separator { width: 1px; height: 16px; background: #e0e0e0; margin: 0 4px; }
+        /* Action buttons */
+        .message-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+        .action-btn { background:none; border:none; padding:6px 10px; border-radius:6px; font-size:13px; color:#6b6b6b; display:flex; align-items:center; gap:4px; cursor:pointer; }
+        .action-btn:hover { background:#f0f0f0; }
 
-        /* Input area */
-        .input-area { padding: 12px 24px 24px; background: linear-gradient(180deg, transparent 0%, #fff 20%); }
-        .input-wrapper { max-width: 768px; margin: 0 auto; }
-        .input-box {
-            display: flex; align-items: flex-end; gap: 8px;
-            background: #fff; border: 1px solid var(--input-border);
-            border-radius: 24px; padding: 6px 8px 6px 16px;
-            box-shadow: var(--shadow); transition: border 0.2s;
-        }
-        .input-box:focus-within { border-color: #9e9e9e; }
-        .attach-btn {
-            background: none; border: none; padding: 6px;
-            border-radius: 8px; cursor: pointer; color: #6b6b6b;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .attach-btn:hover { background: #f0f0f0; }
-        .attach-btn svg { width: 20px; height: 20px; }
-        .input-box textarea {
-            flex: 1; border: none; outline: none; resize: none;
-            font-size: 16px; font-family: inherit; line-height: 1.5;
-            max-height: 200px; min-height: 28px; padding: 4px 0;
-            color: var(--text-primary); background: transparent;
-        }
-        .input-box textarea::placeholder { color: #9e9e9e; }
-        .send-btn {
-            width: 34px; height: 34px; border-radius: 50%;
-            border: none; background: var(--accent); color: #fff;
-            cursor: pointer; flex-shrink: 0; display: flex;
-            align-items: center; justify-content: center;
-            transition: background 0.2s, transform 0.1s;
-        }
-        .send-btn:disabled { background: #d1d5db; cursor: default; }
-        .send-btn:active:not(:disabled) { transform: scale(0.94); }
-        .send-btn svg { width: 18px; height: 18px; transform: translateX(1px); }
-
-        /* Hidden admin elements */
-        .admin-indicator {
-            position: fixed; bottom: 16px; right: 16px;
-            width: 10px; height: 10px; border-radius: 50%;
-            background: #ccc; z-index: 100; cursor: pointer;
-            opacity: 0.4; transition: opacity 0.3s, background 0.3s;
-        }
-        .admin-indicator.pending { background: #f97316; opacity: 1; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(249,115,22,0.4);} 70%{box-shadow:0 0 0 10px rgba(249,115,22,0);} 100%{box-shadow:0 0 0 0 rgba(249,115,22,0);} }
-        .admin-modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 200;
-            align-items: center; justify-content: center;
-            backdrop-filter: blur(4px);
-        }
-        .admin-modal-overlay.open { display: flex; }
-        .admin-modal {
-            background: #fff; border-radius: 16px; padding: 24px;
-            width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-        .admin-modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
-        .admin-modal input {
-            width: 100%; padding: 12px 16px; border: 1px solid var(--input-border);
-            border-radius: 12px; font-size: 15px; margin-bottom: 16px;
-        }
-        .admin-modal-buttons { display: flex; gap: 8px; justify-content: flex-end; }
-        .admin-modal-buttons button {
-            padding: 8px 18px; border-radius: 20px; border: none;
-            font-size: 14px; font-weight: 500; cursor: pointer;
-        }
-        .admin-send-btn-modal { background: var(--accent); color: #fff; }
-        .admin-cancel-btn { background: #f0f0f0; color: #333; }
-
-        .sidebar-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 25;
-        }
-        .sidebar-overlay.show { display: block; }
-        @media (min-width: 769px) { .sidebar-overlay { display:none !important; } }
+        /* Input areas */
+        .input-area { padding:12px 24px 24px; background:linear-gradient(transparent 0%, #fff 20%); }
+        .input-box { display:flex; align-items:flex-end; gap:8px; background:#fff; border:1px solid #d1d5db; border-radius:24px; padding:6px 8px 6px 16px; box-shadow:var(--shadow); }
+        .input-box textarea { flex:1; border:none; outline:none; resize:none; font-size:16px; font-family:inherit; padding:4px 0; }
+        .send-btn { width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .send-btn:disabled { background:#d1d5db; }
+        .input-footer { text-align:center; color:#9e9e9e; font-size:11px; margin-top:8px; }
     </style>
 </head>
 <body>
-
-    <!-- Login Overlay -->
+    <!-- Login -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-card">
             <h2>🔐 ChatGPT</h2>
@@ -263,119 +110,69 @@
         </div>
     </div>
 
-    <!-- Main App -->
-    <div id="app" style="display:none; flex:1; display:flex;">
+    <!-- App -->
+    <div id="app" style="display:none; flex:1;">
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-        <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>ChatGPT</h2>
-                <button class="close-sidebar-btn" id="closeSidebarBtn">
-                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
+                <button class="close-sidebar-btn" id="closeSidebarBtn">✕</button>
             </div>
             <button class="new-chat-btn" id="newChatBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                New chat
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New chat
             </button>
-            <div class="chat-history" id="chatHistory"></div>
+            <div class="chat-history"></div>
             <div class="sidebar-footer">
-                <div class="user-avatar-sidebar">U</div>
-                <span>Upgrade plan</span>
+                <div style="width:28px;height:28px;border-radius:50%;background:#4a4a4a;display:flex;align-items:center;justify-content:center;font-size:14px;">U</div>
+                Upgrade plan
             </div>
         </aside>
 
-        <!-- Main -->
         <main class="main">
-            <!-- Top bar -->
             <div class="top-bar">
-                <button class="menu-btn" id="menuBtn" title="Toggle sidebar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                </button>
-                <div class="model-selector" id="modelSelector">
-                    <span>ChatGPT</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <div class="top-bar-right">
-                    <button class="new-chat-btn" id="topNewChatBtn" style="margin:0; border:none; padding:6px 10px; font-size:14px;">
-                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    </button>
-                </div>
+                <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+                <div class="model-selector"><span>ChatGPT</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg></div>
+                <div class="top-bar-right"><button class="new-chat-btn" id="topNewChatBtn"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
             </div>
 
-            <!-- Chat area -->
             <div class="chat-container" id="chatContainer">
                 <div class="welcome-screen" id="welcomeScreen">
                     <h1 class="welcome-heading">Hi again 😊</h1>
                     <p class="welcome-subtitle">What do you want to dive into today?</p>
                     <div class="suggestion-grid">
-                        <div class="suggestion-card" data-prompt="Write a Python script for automation">
-                            <span class="emoji">🐍</span>
-                            <div class="title">Code help</div>
-                            <div class="desc">Write a Python script for automation</div>
-                        </div>
-                        <div class="suggestion-card" data-prompt="Explain black holes in simple terms">
-                            <span class="emoji">🌌</span>
-                            <div class="title">Learn something</div>
-                            <div class="desc">Explain black holes in simple terms</div>
-                        </div>
-                        <div class="suggestion-card" data-prompt="Draft a polite email to decline a meeting invite">
-                            <span class="emoji">✉️</span>
-                            <div class="title">Write & edit</div>
-                            <div class="desc">Draft a polite email to decline a meeting invite</div>
-                        </div>
-                        <div class="suggestion-card" data-prompt="Give me a 7‑day meal plan for a vegetarian diet">
-                            <span class="emoji">🥗</span>
-                            <div class="title">Plan & organize</div>
-                            <div class="desc">Give me a 7‑day meal plan for a vegetarian diet</div>
-                        </div>
+                        <div class="suggestion-card" data-prompt="Write a Python script for automation"><span class="emoji">🐍</span><strong>Code help</strong><br>Write a Python script for automation</div>
+                        <div class="suggestion-card" data-prompt="Explain black holes in simple terms"><span class="emoji">🌌</span><strong>Learn something</strong><br>Explain black holes in simple terms</div>
+                        <div class="suggestion-card" data-prompt="Draft a polite email to decline a meeting invite"><span class="emoji">✉️</span><strong>Write & edit</strong><br>Draft a polite email to decline a meeting invite</div>
+                        <div class="suggestion-card" data-prompt="Give me a 7‑day meal plan for a vegetarian diet"><span class="emoji">🥗</span><strong>Plan & organize</strong><br>Give me a 7‑day meal plan for a vegetarian diet</div>
                     </div>
                 </div>
                 <div class="messages-wrapper" id="messagesWrapper"></div>
             </div>
 
-            <!-- User input area (visible for user role) -->
+            <!-- USER INPUT (shown for user) -->
             <div class="input-area" id="userInputArea" style="display:none;">
-                <div class="input-wrapper">
-                    <div class="input-box">
-                        <button class="attach-btn" id="attachBtn" title="Attach file">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-                        </button>
-                        <textarea id="userInput" placeholder="Message ChatGPT..." rows="1"></textarea>
-                        <button class="send-btn" id="sendBtn" disabled>
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                        </button>
-                    </div>
-                    <p class="input-footer">ChatGPT can make mistakes. Check important info.</p>
+                <div class="input-box">
+                    <textarea id="userInput" placeholder="Message ChatGPT..." rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn" disabled><svg viewBox="0 0 24 24" fill="currentColor" width="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
                 </div>
+                <p class="input-footer">ChatGPT can make mistakes. Check important info.</p>
+            </div>
+
+            <!-- ADMIN REPLY AREA (shown for admin) -->
+            <div class="input-area" id="adminReplyArea" style="display:none;">
+                <div class="input-box">
+                    <textarea id="adminReplyInput" placeholder="Reply as ChatGPT..." rows="1"></textarea>
+                    <button class="send-btn" id="adminSendBtn"><svg viewBox="0 0 24 24" fill="currentColor" width="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+                </div>
+                <p class="input-footer">You are replying as ChatGPT</p>
             </div>
         </main>
-    </div>
-
-    <!-- Hidden Admin Indicator -->
-    <div class="admin-indicator" id="adminIndicator" title="Reply as ChatGPT"></div>
-
-    <!-- Hidden Admin Modal -->
-    <div class="admin-modal-overlay" id="adminModalOverlay">
-        <div class="admin-modal">
-            <h3>Reply as ChatGPT</h3>
-            <input type="text" id="adminReplyInput" placeholder="Type your reply..." autocomplete="off" />
-            <div class="admin-modal-buttons">
-                <button class="admin-cancel-btn" id="adminCancelBtn">Cancel</button>
-                <button class="admin-send-btn-modal" id="adminSendModalBtn">Send</button>
-            </div>
-        </div>
     </div>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
     <script>
-        // ═══════════════════════════════════════
-        // 🔥 YOUR FIREBASE CONFIG
-        // ═══════════════════════════════════════
         const firebaseConfig = {
             apiKey: "AIzaSyB4zdYmAMsWT7oQW3Ul1fFzes3iscS5o7ys",
             authDomain: "chattgpt-6983d.firebaseapp.com",
@@ -383,22 +180,18 @@
             projectId: "chattgpt-6983d",
             storageBucket: "chattgpt-6983d.firebasestorage.app",
             messagingSenderId: "356500913687",
-            appId: "1:356500913687:web:28f98398a6b55a6962e652",
-            measurementId: "G-BW4TVZ7SJB"
+            appId: "1:356500913687:web:28f98398a6b55a6962e652"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         const chatId = "global_chat";
         const messagesRef = db.ref('chats/' + chatId + '/messages');
 
         const USER_PASS = "pra(sam)26";
         const ADMIN_PASS = "PRA(SAM)26";
         let role = null;
-        let waitingForReply = false;
 
-        // ── LOGIN ──
+        // Login
         document.getElementById('loginBtn').addEventListener('click', () => {
             const pw = document.getElementById('passwordInput').value;
             if (pw === USER_PASS) { role = 'user'; startApp(); }
@@ -410,98 +203,35 @@
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
 
+            // Show correct input
             if (role === 'user') {
                 document.getElementById('userInputArea').style.display = 'block';
+                document.getElementById('adminReplyArea').style.display = 'none';
                 setupUserInput();
-                document.getElementById('attachBtn').addEventListener('click', () => {
-                    alert('File upload is not available in this demo.');
-                });
             } else {
                 document.getElementById('userInputArea').style.display = 'none';
-                setupAdmin();
+                document.getElementById('adminReplyArea').style.display = 'block';
+                setupAdminReply();
             }
 
+            // Listen for messages
             messagesRef.on('child_added', snap => {
                 const msg = snap.val();
                 appendMessage(msg);
             });
 
+            // Suggestion cards (only for user)
             document.querySelectorAll('.suggestion-card').forEach(card => {
                 card.addEventListener('click', () => {
-                    const prompt = card.dataset.prompt;
                     if (role === 'user') {
-                        document.getElementById('userInput').value = prompt;
+                        document.getElementById('userInput').value = card.dataset.prompt;
                         document.getElementById('sendBtn').disabled = false;
-                        document.getElementById('userInput').focus();
                     }
                 });
             });
         }
 
-        // ── ACTION BUTTONS GENERATION ──
-        function createActionButtons(assistantMsgDiv, content) {
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'message-actions';
-
-            // Good response
-            const goodBtn = document.createElement('button');
-            goodBtn.className = 'action-btn';
-            goodBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg> Good response`;
-            goodBtn.addEventListener('click', () => alert('Thanks for your feedback!'));
-
-            // Bad response
-            const badBtn = document.createElement('button');
-            badBtn.className = 'action-btn';
-            badBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 001.96 2.3H10zM17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/></svg> Bad response`;
-            badBtn.addEventListener('click', () => alert('Thanks for your feedback. We will improve.'));
-
-            // Separator
-            const sep1 = document.createElement('div');
-            sep1.className = 'action-separator';
-
-            // Copy
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'action-btn';
-            copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy`;
-            copyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(content).then(() => {
-                    alert('Text copied to clipboard!');
-                });
-            });
-
-            // Separator
-            const sep2 = document.createElement('div');
-            sep2.className = 'action-separator';
-
-            // Try again (Regenerate)
-            const tryAgainBtn = document.createElement('button');
-            tryAgainBtn.className = 'action-btn';
-            tryAgainBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Try again`;
-            tryAgainBtn.addEventListener('click', () => {
-                // Simulate regeneration
-                const newText = "Here's a fresh response: " + content.substring(0, 50) + "...";
-                const parent = assistantMsgDiv.querySelector('.message-text');
-                parent.innerHTML = newText.replace(/\n/g, '<br>');
-            });
-
-            // More actions (vertical dots)
-            const moreBtn = document.createElement('button');
-            moreBtn.className = 'action-btn';
-            moreBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>`;
-            moreBtn.addEventListener('click', () => alert('More actions (share, etc.) would appear here.'));
-
-            actionsDiv.appendChild(goodBtn);
-            actionsDiv.appendChild(badBtn);
-            actionsDiv.appendChild(sep1);
-            actionsDiv.appendChild(copyBtn);
-            actionsDiv.appendChild(sep2);
-            actionsDiv.appendChild(tryAgainBtn);
-            actionsDiv.appendChild(moreBtn);
-
-            assistantMsgDiv.querySelector('.message-content').appendChild(actionsDiv);
-        }
-
-        // ── APPEND MESSAGE ──
+        // Render message with action buttons for assistant
         function appendMessage({ role: msgRole, content }) {
             document.getElementById('welcomeScreen').classList.add('hidden');
             const div = document.createElement('div');
@@ -509,8 +239,8 @@
             div.innerHTML = `
                 <div class="message-avatar">
                     ${msgRole === 'user'
-                        ? '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'
-                        : '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'}
+                        ? '<svg viewBox="0 0 24 24" fill="#666"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'
+                        : '<svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'}
                 </div>
                 <div class="message-content">
                     <div class="message-role">${msgRole === 'user' ? 'You' : 'ChatGPT'}</div>
@@ -518,121 +248,68 @@
                 </div>`;
             document.getElementById('messagesWrapper').appendChild(div);
 
-            // Add action buttons for assistant messages ONLY
             if (msgRole === 'assistant') {
-                createActionButtons(div, content);
+                const actions = document.createElement('div');
+                actions.className = 'message-actions';
+                actions.innerHTML = `
+                    <button class="action-btn">👍 Good response</button>
+                    <button class="action-btn">👎 Bad response</button>
+                    <button class="action-btn copy-btn">📋 Copy</button>
+                    <button class="action-btn">🔄 Try again</button>
+                    <button class="action-btn">⚙️ More</button>`;
+                div.querySelector('.message-content').appendChild(actions);
+
+                // Copy functionality
+                actions.querySelector('.copy-btn').addEventListener('click', () => {
+                    navigator.clipboard.writeText(content).then(() => alert('Copied!'));
+                });
             }
 
             document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
-            updateAdminIndicator();
         }
 
-        // ── USER INPUT ──
+        // User sends message
         function setupUserInput() {
             const input = document.getElementById('userInput');
             const btn = document.getElementById('sendBtn');
-            btn.addEventListener('click', sendUserMsg);
+            btn.addEventListener('click', () => {
+                const text = input.value.trim();
+                if (!text) return;
+                messagesRef.push({ role: 'user', content: text, timestamp: firebase.database.ServerValue.TIMESTAMP });
+                input.value = '';
+                btn.disabled = true;
+            });
             input.addEventListener('keydown', e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendUserMsg(); }
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); btn.click(); }
             });
             input.addEventListener('input', () => btn.disabled = !input.value.trim());
         }
 
-        function sendUserMsg() {
-            const text = document.getElementById('userInput').value.trim();
-            if (!text) return;
-            messagesRef.push({
-                role: 'user',
-                content: text,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
+        // Admin sends reply
+        function setupAdminReply() {
+            const input = document.getElementById('adminReplyInput');
+            const btn = document.getElementById('adminSendBtn');
+            btn.addEventListener('click', () => {
+                const text = input.value.trim();
+                if (!text) return;
+                messagesRef.push({ role: 'assistant', content: text, timestamp: firebase.database.ServerValue.TIMESTAMP });
+                input.value = '';
             });
-            document.getElementById('userInput').value = '';
-            document.getElementById('sendBtn').disabled = true;
-        }
-
-        // ── ADMIN REPLY ──
-        function setupAdmin() {
-            document.getElementById('adminIndicator').addEventListener('click', () => {
-                if (waitingForReply) openAdminModal();
-            });
-            document.addEventListener('keydown', e => {
-                if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-                    e.preventDefault();
-                    if (waitingForReply) openAdminModal();
-                }
-            });
-            document.getElementById('adminSendModalBtn').addEventListener('click', sendAdminReply);
-            document.getElementById('adminCancelBtn').addEventListener('click', closeAdminModal);
-            document.getElementById('adminReplyInput').addEventListener('keydown', e => {
-                if (e.key === 'Enter') { e.preventDefault(); sendAdminReply(); }
-            });
-            document.getElementById('adminModalOverlay').addEventListener('click', e => {
-                if (e.target === document.getElementById('adminModalOverlay')) closeAdminModal();
-            });
-            document.addEventListener('keydown', e => {
-                if (e.key === 'Escape' && document.getElementById('adminModalOverlay').classList.contains('open')) {
-                    closeAdminModal();
-                }
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); btn.click(); }
             });
         }
 
-        function updateAdminIndicator() {
-            messagesRef.limitToLast(1).once('value', snap => {
-                const last = snap.val();
-                if (last) {
-                    const lastMsg = Object.values(last)[0];
-                    if (lastMsg.role === 'user') {
-                        waitingForReply = true;
-                        document.getElementById('adminIndicator').classList.add('pending');
-                    } else {
-                        waitingForReply = false;
-                        document.getElementById('adminIndicator').classList.remove('pending');
-                    }
-                }
-            });
-        }
-
-        function openAdminModal() {
-            document.getElementById('adminModalOverlay').classList.add('open');
-            document.getElementById('adminReplyInput').value = '';
-            document.getElementById('adminReplyInput').focus();
-        }
-
-        function closeAdminModal() {
-            document.getElementById('adminModalOverlay').classList.remove('open');
-        }
-
-        function sendAdminReply() {
-            const text = document.getElementById('adminReplyInput').value.trim();
-            if (!text) return;
-            messagesRef.push({
-                role: 'assistant',
-                content: text,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            document.getElementById('adminReplyInput').value = '';
-            closeAdminModal();
-        }
-
-        // ── SIDEBAR & NEW CHAT ──
-        function openSidebar() {
-            document.getElementById('sidebar').classList.add('open');
-            document.getElementById('sidebarOverlay').classList.add('show');
-        }
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('sidebarOverlay').classList.remove('show');
-        }
-        document.getElementById('menuBtn').addEventListener('click', openSidebar);
-        document.getElementById('closeSidebarBtn').addEventListener('click', closeSidebar);
-        document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
-
-        const clearChat = () => {
+        // Sidebar & new chat
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+        document.getElementById('menuBtn').addEventListener('click', toggleSidebar);
+        document.getElementById('closeSidebarBtn').addEventListener('click', toggleSidebar);
+        document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+        function clearChat() {
             messagesRef.remove();
             document.getElementById('messagesWrapper').innerHTML = '';
             document.getElementById('welcomeScreen').classList.remove('hidden');
-            if (role === 'user') document.getElementById('userInput').value = '';
-        };
+        }
         document.getElementById('newChatBtn').addEventListener('click', clearChat);
         document.getElementById('topNewChatBtn').addEventListener('click', clearChat);
     </script>
