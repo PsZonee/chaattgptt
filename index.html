@@ -421,53 +421,42 @@
     </div>
 </div>
 
+<!-- Firebase SDKs (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
-    const DB   = "https://chattgpt-6983d-default-rtdb.firebaseio.com";
-    const KEY  = "AIzaSyB4zdYmAMsWT7oQW3Ul1fFzes3iscS5o7ys";
-    const PATH = "/chats/global_chat/messages";
-    const seenKeys = new Set();
-    let sseConn = null;
+    // Your Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4zdYmAMsWT7oQW3Ul1fFzes3iscS5o7ys",
+        authDomain: "chattgpt-6983d.firebaseapp.com",
+        databaseURL: "https://chattgpt-6983d-default-rtdb.firebaseio.com",
+        projectId: "chattgpt-6983d",
+        storageBucket: "chattgpt-6983d.firebasestorage.app",
+        messagingSenderId: "356500913687",
+        appId: "1:356500913687:web:28f98398a6b55a6962e652"
+    };
 
-    async function fbPush(data) {
-        await fetch(`${DB}${PATH}.json?key=${KEY}`, {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(data)
-        });
-    }
-    async function fbDelete() {
-        await fetch(`${DB}${PATH}.json?key=${KEY}`, { method: 'DELETE' });
-    }
-    function fbListen(cb) {
-        if (sseConn) sseConn.close();
-        sseConn = new EventSource(`${DB}${PATH}.json?key=${KEY}`);
-        sseConn.addEventListener('put', e => {
-            const d = JSON.parse(e.data).data;
-            if (!d) return;
-            Object.entries(d).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0))
-                .forEach(([k,v]) => { if (!seenKeys.has(k)) { seenKeys.add(k); cb(v); } });
-        });
-        sseConn.addEventListener('patch', e => {
-            const d = JSON.parse(e.data).data;
-            if (!d) return;
-            Object.entries(d).forEach(([k,v]) => {
-                if (v && !seenKeys.has(k)) { seenKeys.add(k); cb(v); }
-            });
-        });
-        sseConn.onerror = () => { setTimeout(() => fbListen(cb), 2000); };
-    }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const chatId = "global_chat";
+    const messagesRef = db.ref('chats/' + chatId + '/messages');
 
+    const addedKeys = new Set();   // prevent duplicate messages
     const USER_PASS  = "pra(sam)26";
     const ADMIN_PASS = "PRA(SAM)26";
-    let role = null, currentUserId = Math.random().toString(36).substr(2,6);
+    let role = null;
 
+    // ── LOGIN ──
     document.getElementById('loginBtn').addEventListener('click', () => {
         const pw = document.getElementById('pwInput').value;
         if (pw === USER_PASS)       { role = 'user'; launch(); }
         else if (pw === ADMIN_PASS) { role = 'assistant'; launch(); }
         else { document.getElementById('loginErr').textContent = 'Incorrect password.'; }
     });
-    document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('loginBtn').click(); });
+    document.getElementById('pwInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
 
     function launch() {
         document.getElementById('loginOverlay').style.display = 'none';
@@ -483,40 +472,51 @@
             setupAdminInput();
         }
 
-        fbListen(addMessage);
-        document.querySelectorAll('.suggestion-card').forEach(c => {
-            c.addEventListener('click', () => {
+        // Real-time listener (handles initial load and updates)
+        messagesRef.on('child_added', snap => {
+            const key = snap.key;
+            if (addedKeys.has(key)) return;   // ignore duplicates
+            addedKeys.add(key);
+            const msg = snap.val();
+            if (msg && msg.content) {
+                renderMessage(msg.role, msg.content);
+            }
+        });
+
+        // Click suggestions for user
+        document.querySelectorAll('.suggestion-card').forEach(card => {
+            card.addEventListener('click', () => {
                 if (role !== 'user') return;
                 const ta = document.getElementById('userTa');
-                ta.value = c.dataset.p;
+                ta.value = card.dataset.p;
                 ta.dispatchEvent(new Event('input'));
                 ta.focus();
             });
         });
     }
 
+    // ── Helpers ──
     function escHtml(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     }
     function scrollToBottom() {
-        document.getElementById('chatScroll').scrollTop = document.getElementById('chatScroll').scrollHeight;
+        const sc = document.getElementById('chatScroll');
+        sc.scrollTop = sc.scrollHeight;
     }
 
-    function addMessage(msg) {
-        if (!msg || !msg.content) return;
-        const r = msg.role;
+    function renderMessage(role, content) {
         document.getElementById('welcome').classList.add('hidden');
         const wrap = document.getElementById('msgWrap');
         const div = document.createElement('div');
-        div.className = 'msg ' + r;
+        div.className = 'msg ' + role;
 
-        if (r === 'user') {
-            div.innerHTML = `<div class="msg-user-bubble">${escHtml(msg.content)}</div>`;
+        if (role === 'user') {
+            div.innerHTML = `<div class="msg-user-bubble">${escHtml(content)}</div>`;
         } else {
-            const safe = encodeURIComponent(msg.content);
+            const safe = encodeURIComponent(content);
             div.innerHTML = `
                 <div class="msg-assistant-content">
-                    <div class="msg-assistant-text">${escHtml(msg.content)}</div>
+                    <div class="msg-assistant-text">${escHtml(content)}</div>
                     <div class="msg-actions">
                         <button class="act-btn" data-action="copy" data-text="${safe}" title="Copy">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
@@ -535,12 +535,35 @@
                         </button>
                     </div>
                 </div>`;
-            // Add action listeners...
+
+            div.querySelectorAll('.act-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const a = btn.dataset.action;
+                    if (a === 'copy') {
+                        navigator.clipboard.writeText(decodeURIComponent(btn.dataset.text));
+                        btn.classList.add('copied');
+                        const origHTML = btn.innerHTML;
+                        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#19c37d" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+                        setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = origHTML; }, 1800);
+                    } else if (a === 'like') {
+                        btn.classList.toggle('liked');
+                        div.querySelector('[data-action="dislike"]').classList.remove('disliked');
+                    } else if (a === 'dislike') {
+                        btn.classList.toggle('disliked');
+                        div.querySelector('[data-action="like"]').classList.remove('liked');
+                    } else if (a === 'read') {
+                        const text = decodeURIComponent(div.querySelector('[data-action="copy"]').dataset.text);
+                        speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+                    }
+                });
+            });
         }
+
         wrap.appendChild(div);
         scrollToBottom();
     }
 
+    // ── User input ──
     function setupUserInput() {
         const ta = document.getElementById('userTa');
         const btn = document.getElementById('sendBtn');
@@ -549,18 +572,27 @@
             ta.style.height = 'auto';
             ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
         });
-        ta.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+        ta.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
         btn.addEventListener('click', send);
+
         function send() {
             const text = ta.value.trim();
             if (!text) return;
-            // Optimistic local update
-            addMessage({ role:'user', content:text });
-            fbPush({ role:'user', content:text, ts: Date.now() });
+            // Optimistic local render
+            renderMessage('user', text);
+            // Push to Firebase
+            messagesRef.push().set({
+                role: 'user',
+                content: text,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
             ta.value = ''; ta.style.height = 'auto'; btn.disabled = true;
         }
     }
 
+    // ── Admin input ──
     function setupAdminInput() {
         const ta = document.getElementById('adminTa');
         const btn = document.getElementById('adminSendBtn');
@@ -568,18 +600,25 @@
             ta.style.height = 'auto';
             ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
         });
-        ta.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+        ta.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
         btn.addEventListener('click', send);
+
         function send() {
             const text = ta.value.trim();
             if (!text) return;
-            addMessage({ role:'assistant', content:text });
-            fbPush({ role:'assistant', content:text, ts: Date.now() });
+            renderMessage('assistant', text);
+            messagesRef.push().set({
+                role: 'assistant',
+                content: text,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
             ta.value = ''; ta.style.height = 'auto';
         }
     }
 
-    // Sidebar toggles
+    // ── Sidebar toggles ──
     function openSb()  { document.getElementById('sidebar').classList.add('mobile-open'); document.getElementById('sbOverlay').classList.add('open'); }
     function closeSb() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sbOverlay').classList.remove('open'); }
     document.getElementById('menuBtn').addEventListener('click', () => {
@@ -591,13 +630,13 @@
     });
     document.getElementById('sbOverlay').addEventListener('click', closeSb);
 
+    // ── New chat ──
     function clearChat() {
-        seenKeys.clear();
-        fbDelete();
+        addedKeys.clear();
+        messagesRef.remove();                    // delete all messages from Firebase
         document.getElementById('msgWrap').innerHTML = '';
         document.getElementById('welcome').classList.remove('hidden');
         closeSb();
-        fbListen(addMessage);
     }
     document.getElementById('sbNew').addEventListener('click', clearChat);
     document.getElementById('newChatBtnTop').addEventListener('click', clearChat);
