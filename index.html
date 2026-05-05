@@ -496,6 +496,29 @@
     const ADMIN_PASS = "PRA(SAM)26";
     let role = null;
 
+    // ── Cipher maps ──
+    // decodeMap: cipher letter → English letter
+    const decodeMap = {
+      p:'a',m:'b',t:'c',g:'d',n:'e',r:'f',i:'g',c:'h',o:'i',y:'j',
+      z:'k',q:'l',d:'m',l:'n',s:'o',u:'p',w:'q',e:'r',h:'s',v:'t',
+      a:'u',x:'v',f:'w',j:'x',b:'y',k:'z'
+    };
+    // encodeMap: English letter → cipher letter (explicit, no computed reverse)
+    const encodeMap = {
+      a:'p',b:'m',c:'t',d:'g',e:'n',f:'r',g:'i',h:'c',i:'o',j:'y',
+      k:'z',l:'q',m:'d',n:'l',o:'s',p:'u',q:'w',r:'e',s:'h',t:'v',
+      u:'a',v:'x',w:'f',x:'j',y:'b',z:'k'
+    };
+
+    function cipherTranslate(text, map) {
+      return text.split('').map(ch => {
+        const lower = ch.toLowerCase();
+        const mapped = map[lower];
+        if (mapped) return ch === ch.toUpperCase() ? mapped.toUpperCase() : mapped;
+        return ch;
+      }).join('');
+    }
+
     // ── Audio: one shared context, unlocked on first gesture ──
     let audioCtx = null;
     function unlockAudio() {
@@ -552,13 +575,17 @@
       if (role === 'user') {
         document.getElementById('userInputWrap').style.display = 'block';
         document.getElementById('adminBar').classList.remove('active');
-        // User never sees userTypingBar; admin never sees adminTypingBar
         document.getElementById('userTypingBar').style.display = 'none';
+        // Debug: show role in page title temporarily
+        document.title = 'ChatGPT [USER mode]';
+        setTimeout(() => { document.title = 'ChatGPT'; }, 3000);
         setupUserInput();
       } else {
         document.getElementById('userInputWrap').style.display = 'none';
         document.getElementById('adminBar').classList.add('active');
         document.getElementById('adminTypingBar').style.display = 'none';
+        document.title = 'ChatGPT [ADMIN mode]';
+        setTimeout(() => { document.title = 'ChatGPT'; }, 3000);
         setupAdminInput();
       }
 
@@ -633,13 +660,26 @@
       const div  = document.createElement('div');
       div.className = 'msg ' + msgRole;
 
+      // ── Cipher translation ──
+      let displayContent = content;
+      const currentRole = role; // capture at call time
+      if (msgRole === 'user' && currentRole === 'assistant') {
+        displayContent = cipherTranslate(content, decodeMap);
+      } else if (msgRole === 'assistant' && currentRole === 'user') {
+        displayContent = cipherTranslate(content, encodeMap);
+      }
+
       if (msgRole === 'user') {
-        div.innerHTML = '<div class="msg-user-bubble">' + escHtml(content) + '</div>';
+        // Admin sees decoded English; also show the original cipher in small text
+        const originalHint = (role === 'assistant' && displayContent !== content)
+          ? '<div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-style:italic;">cipher: ' + escHtml(content) + '</div>'
+          : '';
+        div.innerHTML = '<div class="msg-user-bubble">' + escHtml(displayContent) + originalHint + '</div>';
       } else {
-        const safe = encodeURIComponent(content);
+        const safe = encodeURIComponent(displayContent);
         div.innerHTML =
           '<div class="msg-assistant-content">' +
-            '<div class="msg-assistant-text">' + escHtml(content) + '</div>' +
+            '<div class="msg-assistant-text">' + escHtml(displayContent) + '</div>' +
             '<div class="msg-actions">' +
               '<button class="act-btn" data-action="copy" data-text="' + safe + '" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>' +
               '<button class="act-btn" data-action="like" title="Good response"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg></button>' +
