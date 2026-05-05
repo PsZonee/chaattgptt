@@ -243,6 +243,30 @@
             margin-top: 5px; font-weight: 500;
         }
 
+        /* ── Typing indicator bar ── */
+        .typing-bar {
+            height: 0; overflow: hidden;
+            transition: height 0.2s ease;
+            display: flex; align-items: center;
+            padding: 0 20px; gap: 8px;
+            font-size: 13px; color: var(--text-muted);
+            max-width: 768px; margin: 0 auto; width: 100%;
+            flex-shrink: 0;
+        }
+        .typing-bar.show { height: 28px; }
+        .tdots { display: flex; gap: 4px; align-items: center; }
+        .tdots span {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--text-muted);
+            animation: tdot 1.2s infinite ease-in-out;
+        }
+        .tdots span:nth-child(2) { animation-delay: 0.15s; }
+        .tdots span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes tdot {
+            0%,60%,100% { transform:translateY(0); opacity:0.35; }
+            30%          { transform:translateY(-5px); opacity:1; }
+        }
+
         /* Mobile sidebar overlay */
         .sidebar-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6);
@@ -374,6 +398,18 @@
             <div class="messages-wrap" id="msgWrap"></div>
         </div>
 
+        <!-- Typing status bars — sit between chat and input, always visible -->
+        <!-- Admin sees this one when user types -->
+        <div class="typing-bar" id="userTypingBar">
+            <div class="tdots"><span></span><span></span><span></span></div>
+            <span>User is typing…</span>
+        </div>
+        <!-- User sees this one when admin types -->
+        <div class="typing-bar" id="adminTypingBar">
+            <div class="tdots"><span></span><span></span><span></span></div>
+            <span>ChatGPT is thinking…</span>
+        </div>
+
         <!-- User input -->
         <div class="input-wrap" id="userInputWrap">
             <div class="input-container">
@@ -413,33 +449,25 @@
 
 
 <script>
-  // Load Firebase scripts sequentially, then run the app
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = src;
-      s.onload = resolve;
+      s.src = src; s.onload = resolve;
       s.onerror = () => reject(new Error('Failed: ' + src));
       document.head.appendChild(s);
     });
   }
 
   async function loadFirebase() {
-    const primary = [
-      'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
-      'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js'
-    ];
-    const fallback = [
-      'https://cdn.jsdelivr.net/npm/firebase@9.23.0/compat/app/dist/index.js',
-      'https://cdn.jsdelivr.net/npm/firebase@9.23.0/compat/database/dist/index.js'
-    ];
     try {
-      for (const url of primary) await loadScript(url);
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
     } catch (_) {
       try {
-        for (const url of fallback) await loadScript(url);
+        await loadScript('https://cdn.jsdelivr.net/npm/firebase@9.23.0/compat/app/dist/index.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/firebase@9.23.0/compat/database/dist/index.js');
       } catch (err) {
-        document.body.innerHTML = '<div style="color:#ff6b6b;padding:40px;font-family:sans-serif;font-size:16px;">❌ Could not load Firebase. Check your internet connection and try again.</div>';
+        document.body.innerHTML = '<div style="color:#ff6b6b;padding:40px;font-family:sans-serif;">❌ Could not load Firebase.</div>';
         return;
       }
     }
@@ -447,242 +475,290 @@
   }
 
   function startApp() {
-    const firebaseConfig = {
-        apiKey: "AIzaSyB4zdYmAMsWT7oQW3Ul1fFzes3iscS5o7ys",
-        authDomain: "chattgpt-6983d.firebaseapp.com",
-        databaseURL: "https://chattgpt-6983d-default-rtdb.firebaseio.com",
-        projectId: "chattgpt-6983d",
-        storageBucket: "chattgpt-6983d.firebasestorage.app",
-        messagingSenderId: "356500913687",
-        appId: "1:356500913687:web:28f98398a6b55a6962e652"
-    };
+    firebase.initializeApp({
+      apiKey: "AIzaSyB4zdYmAMsWT7oQW3Ul1fFzes3iscS5o7ys",
+      authDomain: "chattgpt-6983d.firebaseapp.com",
+      databaseURL: "https://chattgpt-6983d-default-rtdb.firebaseio.com",
+      projectId: "chattgpt-6983d",
+      storageBucket: "chattgpt-6983d.firebasestorage.app",
+      messagingSenderId: "356500913687",
+      appId: "1:356500913687:web:28f98398a6b55a6962e652"
+    });
 
-    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const chatId = "global_chat";
     const messagesRef = db.ref('chats/' + chatId + '/messages');
+    // Typing stored at same root level as messages — same rules apply
+    const typingRef   = db.ref('chats/' + chatId + '/typing');
 
     const addedKeys = new Set();
     const USER_PASS  = "pra(sam)26";
     const ADMIN_PASS = "PRA(SAM)26";
     let role = null;
 
+    // ── Audio: one shared context, unlocked on first gesture ──
+    let audioCtx = null;
+    function unlockAudio() {
+      if (audioCtx) return;
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    }
+    document.addEventListener('touchstart', unlockAudio, {passive:true});
+    document.addEventListener('mousedown',  unlockAudio, {passive:true});
+    document.addEventListener('keydown',    unlockAudio, {passive:true});
+
+    function playDing() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        [[0, 880, 0.18], [0.13, 1046, 0.26]].forEach(([when, freq, dur]) => {
+          const osc = audioCtx.createOscillator();
+          const g   = audioCtx.createGain();
+          osc.connect(g); g.connect(audioCtx.destination);
+          osc.frequency.value = freq; osc.type = 'sine';
+          const t = audioCtx.currentTime + when;
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(0.5, t + 0.015);
+          g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          osc.start(t); osc.stop(t + dur + 0.05);
+        });
+      } catch(e) { console.warn('Audio failed:', e); }
+    }
+
+    // ── Tab title badge ──
+    let unread = 0;
+    const baseTitle = document.title;
+    function bumpTitle() {
+      unread++;
+      document.title = '(' + unread + ') New message — ChatGPT';
+    }
+    window.addEventListener('focus', () => { unread = 0; document.title = baseTitle; });
+
     // ── LOGIN ──
     document.getElementById('loginBtn').addEventListener('click', tryLogin);
-    document.getElementById('pwInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter') tryLogin();
-    });
+    document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
 
     function tryLogin() {
-        const pw = document.getElementById('pwInput').value;
-        if (pw === USER_PASS)       { role = 'user';      launch(); }
-        else if (pw === ADMIN_PASS) { role = 'assistant'; launch(); }
-        else { document.getElementById('loginErr').textContent = 'Incorrect password.'; }
+      const pw = document.getElementById('pwInput').value;
+      if      (pw === USER_PASS)  { role = 'user';      launch(); }
+      else if (pw === ADMIN_PASS) { role = 'assistant'; launch(); }
+      else { document.getElementById('loginErr').textContent = 'Incorrect password.'; }
     }
 
     function launch() {
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
+      unlockAudio(); // first gesture is the login button click — unlock here
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
 
-        if (role === 'user') {
-            document.getElementById('userInputWrap').style.display = 'block';
-            document.getElementById('adminBar').classList.remove('active');
-            setupUserInput();
-        } else {
-            document.getElementById('userInputWrap').style.display = 'none';
-            document.getElementById('adminBar').classList.add('active');
-            setupAdminInput();
+      if (role === 'user') {
+        document.getElementById('userInputWrap').style.display = 'block';
+        document.getElementById('adminBar').classList.remove('active');
+        // User never sees userTypingBar; admin never sees adminTypingBar
+        document.getElementById('userTypingBar').style.display = 'none';
+        setupUserInput();
+      } else {
+        document.getElementById('userInputWrap').style.display = 'none';
+        document.getElementById('adminBar').classList.add('active');
+        document.getElementById('adminTypingBar').style.display = 'none';
+        setupAdminInput();
+      }
+
+      // ── Load history silently, then watch for NEW messages only ──
+      messagesRef.once('value', snap => {
+        if (snap.exists()) {
+          snap.forEach(child => {
+            addedKeys.add(child.key);
+            const m = child.val();
+            if (m && m.content) renderMessage(m.role, m.content);
+          });
         }
-
-        // ── THE FIX: single source of truth ──
-        // child_added fires instantly for new messages AND loads existing ones on connect.
-        // No optimistic rendering anywhere — Firebase handles display for everyone.
+        // After history loaded, attach real-time listener for new messages
         messagesRef.on('child_added', snap => {
-            const key = snap.key;
-            if (addedKeys.has(key)) return;
-            addedKeys.add(key);
-            const msg = snap.val();
-            if (msg && msg.content) {
-                renderMessage(msg.role, msg.content);
-            }
+          if (addedKeys.has(snap.key)) return;
+          addedKeys.add(snap.key);
+          const m = snap.val();
+          if (!m || !m.content) return;
+          renderMessage(m.role, m.content);
+          // Admin gets sound + title bump on every new user message
+          if (role === 'assistant' && m.role === 'user') {
+            playDing();
+            bumpTitle();
+          }
         });
+      });
 
-        // Suggestion cards (user only)
-        document.querySelectorAll('.suggestion-card').forEach(card => {
-            card.addEventListener('click', () => {
-                if (role !== 'user') return;
-                const ta = document.getElementById('userTa');
-                ta.value = card.dataset.p;
-                ta.dispatchEvent(new Event('input'));
-                ta.focus();
-            });
+      // ── Typing listeners ──
+      // Admin sees user typing bar
+      typingRef.child('user').on('value', snap => {
+        if (role !== 'assistant') return;
+        document.getElementById('userTypingBar').classList.toggle('show', snap.val() === true);
+        if (snap.val() === true) scrollBottom();
+      });
+      // User sees admin (ChatGPT) thinking bar
+      typingRef.child('admin').on('value', snap => {
+        if (role !== 'user') return;
+        document.getElementById('adminTypingBar').classList.toggle('show', snap.val() === true);
+        if (snap.val() === true) scrollBottom();
+      });
+
+      // Clean up typing on tab close
+      window.addEventListener('pagehide', () => {
+        typingRef.child(role === 'user' ? 'user' : 'admin').set(false);
+      });
+      typingRef.child(role === 'user' ? 'user' : 'admin').onDisconnect().set(false);
+
+      // Suggestion cards
+      document.querySelectorAll('.suggestion-card').forEach(card => {
+        card.addEventListener('click', () => {
+          if (role !== 'user') return;
+          const ta = document.getElementById('userTa');
+          ta.value = card.dataset.p;
+          ta.dispatchEvent(new Event('input'));
+          ta.focus();
         });
+      });
     }
 
     // ── Helpers ──
     function escHtml(s) {
-        return String(s)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\n/g, '<br>');
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     }
-
-    function scrollToBottom() {
-        const sc = document.getElementById('chatScroll');
-        sc.scrollTop = sc.scrollHeight;
+    function scrollBottom() {
+      const sc = document.getElementById('chatScroll');
+      sc.scrollTop = sc.scrollHeight;
     }
 
     function renderMessage(msgRole, content) {
-        document.getElementById('welcome').classList.add('hidden');
-        const wrap = document.getElementById('msgWrap');
-        const div = document.createElement('div');
-        div.className = 'msg ' + msgRole;
+      document.getElementById('welcome').classList.add('hidden');
+      const wrap = document.getElementById('msgWrap');
+      const div  = document.createElement('div');
+      div.className = 'msg ' + msgRole;
 
-        if (msgRole === 'user') {
-            div.innerHTML = `<div class="msg-user-bubble">${escHtml(content)}</div>`;
-        } else {
-            const safe = encodeURIComponent(content);
-            div.innerHTML = `
-                <div class="msg-assistant-content">
-                    <div class="msg-assistant-text">${escHtml(content)}</div>
-                    <div class="msg-actions">
-                        <button class="act-btn" data-action="copy" data-text="${safe}" title="Copy">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                        </button>
-                        <button class="act-btn" data-action="like" title="Good response">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
-                        </button>
-                        <button class="act-btn" data-action="dislike" title="Bad response">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 001.96 2.3H10zM17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/></svg>
-                        </button>
-                        <button class="act-btn" data-action="read" title="Read aloud">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
-                        </button>
-                        <button class="act-btn" data-action="more" title="More">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg>
-                        </button>
-                    </div>
-                </div>`;
+      if (msgRole === 'user') {
+        div.innerHTML = '<div class="msg-user-bubble">' + escHtml(content) + '</div>';
+      } else {
+        const safe = encodeURIComponent(content);
+        div.innerHTML =
+          '<div class="msg-assistant-content">' +
+            '<div class="msg-assistant-text">' + escHtml(content) + '</div>' +
+            '<div class="msg-actions">' +
+              '<button class="act-btn" data-action="copy" data-text="' + safe + '" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>' +
+              '<button class="act-btn" data-action="like" title="Good response"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg></button>' +
+              '<button class="act-btn" data-action="dislike" title="Bad response"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 001.96 2.3H10zM17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/></svg></button>' +
+              '<button class="act-btn" data-action="read" title="Read aloud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></button>' +
+            '</div>' +
+          '</div>';
 
-            div.querySelectorAll('.act-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const a = btn.dataset.action;
-                    if (a === 'copy') {
-                        navigator.clipboard.writeText(decodeURIComponent(btn.dataset.text));
-                        const origHTML = btn.innerHTML;
-                        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#19c37d" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
-                        setTimeout(() => { btn.innerHTML = origHTML; }, 1800);
-                    } else if (a === 'like') {
-                        btn.style.color = '#19c37d';
-                        div.querySelector('[data-action="dislike"]').style.color = '';
-                    } else if (a === 'dislike') {
-                        btn.style.color = '#ff6b6b';
-                        div.querySelector('[data-action="like"]').style.color = '';
-                    } else if (a === 'read') {
-                        const text = decodeURIComponent(div.querySelector('[data-action="copy"]').dataset.text);
-                        speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-                    }
-                });
-            });
-        }
-
-        wrap.appendChild(div);
-        scrollToBottom();
+        div.querySelectorAll('.act-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const a = btn.dataset.action;
+            if (a === 'copy') {
+              navigator.clipboard.writeText(decodeURIComponent(btn.dataset.text));
+              const orig = btn.innerHTML;
+              btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#19c37d" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+              setTimeout(() => { btn.innerHTML = orig; }, 1800);
+            } else if (a === 'like') {
+              btn.style.color = '#19c37d';
+              div.querySelector('[data-action="dislike"]').style.color = '';
+            } else if (a === 'dislike') {
+              btn.style.color = '#ff6b6b';
+              div.querySelector('[data-action="like"]').style.color = '';
+            } else if (a === 'read') {
+              speechSynthesis.speak(new SpeechSynthesisUtterance(decodeURIComponent(btn.dataset.text)));
+            }
+          });
+        });
+      }
+      wrap.appendChild(div);
+      scrollBottom();
     }
 
-    // ── User input — NO optimistic render, Firebase is single source of truth ──
+    // ── User input ──
     function setupUserInput() {
-        const ta  = document.getElementById('userTa');
-        const btn = document.getElementById('sendBtn');
+      const ta  = document.getElementById('userTa');
+      const btn = document.getElementById('sendBtn');
+      let typTimer = null;
 
-        ta.addEventListener('input', () => {
-            btn.disabled = !ta.value.trim();
-            ta.style.height = 'auto';
-            ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
-        });
-        ta.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-        });
-        btn.addEventListener('click', send);
+      function signalTyping() {
+        btn.disabled = !ta.value.trim();
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
+        typingRef.child('user').set(true);
+        clearTimeout(typTimer);
+        typTimer = setTimeout(() => typingRef.child('user').set(false), 2000);
+      }
 
-        function send() {
-            const text = ta.value.trim();
-            if (!text) return;
-            // Push to Firebase — child_added listener renders it instantly for everyone
-            messagesRef.push({
-                role: 'user',
-                content: text,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            ta.value = '';
-            ta.style.height = 'auto';
-            btn.disabled = true;
-        }
+      ta.addEventListener('input',          signalTyping);
+      ta.addEventListener('keyup',          signalTyping);
+      ta.addEventListener('compositionend', signalTyping);
+
+      ta.addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); doSend(); } });
+      btn.addEventListener('click', doSend);
+
+      function doSend() {
+        const text = ta.value.trim();
+        if (!text) return;
+        clearTimeout(typTimer);
+        typingRef.child('user').set(false);
+        messagesRef.push({ role:'user', content:text, timestamp: firebase.database.ServerValue.TIMESTAMP });
+        ta.value = ''; ta.style.height = 'auto'; btn.disabled = true;
+      }
     }
 
-    // ── Admin input — NO optimistic render ──
+    // ── Admin input ──
     function setupAdminInput() {
-        const ta  = document.getElementById('adminTa');
-        const btn = document.getElementById('adminSendBtn');
+      const ta  = document.getElementById('adminTa');
+      const btn = document.getElementById('adminSendBtn');
+      let typTimer = null;
 
-        ta.addEventListener('input', () => {
-            ta.style.height = 'auto';
-            ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
-        });
-        ta.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-        });
-        btn.addEventListener('click', send);
+      function signalTyping() {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
+        typingRef.child('admin').set(true);
+        clearTimeout(typTimer);
+        typTimer = setTimeout(() => typingRef.child('admin').set(false), 2500);
+      }
 
-        function send() {
-            const text = ta.value.trim();
-            if (!text) return;
-            // Push to Firebase — child_added listener renders it instantly for everyone
-            messagesRef.push({
-                role: 'assistant',
-                content: text,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            ta.value = '';
-            ta.style.height = 'auto';
-        }
+      ta.addEventListener('input',          signalTyping);
+      ta.addEventListener('keyup',          signalTyping);
+      ta.addEventListener('compositionend', signalTyping);
+
+      ta.addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); doSend(); } });
+      btn.addEventListener('click', doSend);
+
+      function doSend() {
+        const text = ta.value.trim();
+        if (!text) return;
+        clearTimeout(typTimer);
+        typingRef.child('admin').set(false);
+        messagesRef.push({ role:'assistant', content:text, timestamp: firebase.database.ServerValue.TIMESTAMP });
+        ta.value = ''; ta.style.height = 'auto';
+      }
     }
 
     // ── Sidebar ──
-    function openSb()  {
-        document.getElementById('sidebar').classList.add('mobile-open');
-        document.getElementById('sbOverlay').classList.add('open');
-    }
-    function closeSb() {
-        document.getElementById('sidebar').classList.remove('mobile-open');
-        document.getElementById('sbOverlay').classList.remove('open');
-    }
+    function openSb()  { document.getElementById('sidebar').classList.add('mobile-open');    document.getElementById('sbOverlay').classList.add('open'); }
+    function closeSb() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sbOverlay').classList.remove('open'); }
     document.getElementById('menuBtn').addEventListener('click', () => {
-        const sb = document.getElementById('sidebar');
-        if (window.innerWidth <= 768) {
-            sb.classList.contains('mobile-open') ? closeSb() : openSb();
-        } else {
-            sb.classList.toggle('collapsed');
-        }
+      const sb = document.getElementById('sidebar');
+      if (window.innerWidth <= 768) { sb.classList.contains('mobile-open') ? closeSb() : openSb(); }
+      else { sb.classList.toggle('collapsed'); }
     });
     document.getElementById('sbToggle').addEventListener('click', () => {
-        if (window.innerWidth <= 768) closeSb();
-        else document.getElementById('sidebar').classList.toggle('collapsed');
+      if (window.innerWidth <= 768) closeSb(); else document.getElementById('sidebar').classList.toggle('collapsed');
     });
     document.getElementById('sbOverlay').addEventListener('click', closeSb);
 
     // ── New chat ──
     function clearChat() {
-        addedKeys.clear();
-        messagesRef.remove();
-        document.getElementById('msgWrap').innerHTML = '';
-        document.getElementById('welcome').classList.remove('hidden');
-        closeSb();
+      addedKeys.clear();
+      messagesRef.remove();
+      document.getElementById('msgWrap').innerHTML = '';
+      document.getElementById('welcome').classList.remove('hidden');
+      closeSb();
     }
     document.getElementById('sbNew').addEventListener('click', clearChat);
     document.getElementById('newChatBtnTop').addEventListener('click', clearChat);
-  } // end startApp
+  }
 
   loadFirebase();
 </script>
