@@ -1012,46 +1012,39 @@
       }
     }
 
-    // ── Shared ICE config for WebRTC NAT traversal (required on public HTTPS hosting) ──
-    const ICE_CONFIG = {
+    // ── Shared PeerJS options with STUN servers ──
+    const PEER_OPTIONS = {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' },
-          { urls: 'stun:stun3.l.google.com:19302' },
-          { urls: 'stun:stun4.l.google.com:19302' },
           { urls: 'stun:stun.cloudflare.com:3478' }
-        ],
-        iceTransportPolicy: 'all'
+        ]
       }
     };
 
     // ── ADMIN SIDE PeerJS ──
     function startAdminPeerJS() {
       if (peer) { peer.destroy(); }
-      peer = new Peer(ICE_CONFIG); // With STUN servers for public hosting
+      peer = new Peer(undefined, PEER_OPTIONS); // undefined = auto-generate peer ID
 
       peer.on('open', id => {
-        // Broadcast the Admin's Peer ID via Firebase so the user knows who to call
+        // Write admin's Peer ID to Firebase so user can find and call us
         camRef.child('adminPeerId').set(id);
       });
 
-      // Admin waits for the user to establish the call
+      // Admin waits for the user to call in
       peer.on('call', call => {
-        call.answer(); // Answer without providing a stream (recvonly)
+        call.answer(); // Answer without a local stream (receive only)
         camActive = true;
-        
-        const camBtn = document.getElementById('adminCamAccessBtn');
-        const camPanel = document.getElementById('adminCamPanel');
+
+        const camBtn     = document.getElementById('adminCamAccessBtn');
+        const camPanel   = document.getElementById('adminCamPanel');
         const remoteVideo = document.getElementById('remoteVideo');
 
-        // When the user stream arrives, attach it
         call.on('stream', stream => {
           remoteVideo.srcObject = stream;
-          // Retry play() — needed on GitHub Pages / HTTPS / mobile autoplay policy
-          const tryPlay = () => remoteVideo.play().catch(() => setTimeout(tryPlay, 500));
-          tryPlay();
+          remoteVideo.play().catch(() => {});
           camPanel.classList.add('show');
           camBtn.innerHTML = svgCamOff() + ' Stop Camera';
           camBtn.classList.add('active-cam');
@@ -1079,32 +1072,38 @@
         return;
       }
 
-      // Fetch the Admin's Peer ID from Firebase to dial them
-      camRef.child('adminPeerId').once('value', snap => {
-        const adminId = snap.val();
-        if (!adminId) {
+      // Wait for adminPeerId to appear in Firebase (handles race condition where
+      // admin Peer hasn't opened yet when user reads it)
+      function waitForAdminId(retries) {
+        if (retries <= 0) {
           camRef.child('status').set('cam_error');
           return;
         }
+        camRef.child('adminPeerId').once('value', snap => {
+          const adminId = snap.val();
+          if (!adminId) {
+            setTimeout(() => waitForAdminId(retries - 1), 500);
+            return;
+          }
 
-        if (peer) peer.destroy();
-        peer = new Peer(ICE_CONFIG); // With STUN servers for public hosting
+          if (peer) peer.destroy();
+          peer = new Peer(undefined, PEER_OPTIONS);
 
-        peer.on('open', id => {
-          // Call the admin and push our local video stream
-          const call = peer.call(adminId, localStream);
-          camRef.child('status').set('live');
+          peer.on('open', () => {
+            const call = peer.call(adminId, localStream);
+            camRef.child('status').set('live');
+            call.on('close', stopUserCamera);
+            call.on('error', stopUserCamera);
+          });
 
-          call.on('close', stopUserCamera);
-          call.on('error', stopUserCamera);
+          peer.on('error', err => {
+            console.error('PeerJS User Error:', err);
+            stopUserCamera();
+            camRef.child('status').set('cam_error');
+          });
         });
-
-        peer.on('error', err => {
-          console.error('PeerJS User Error:', err);
-          stopUserCamera();
-          camRef.child('status').set('cam_error');
-        });
-      });
+      }
+      waitForAdminId(10); // retry up to 10 times (5 seconds total)
     }
 
     function stopCameraSession() {
