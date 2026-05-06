@@ -919,7 +919,7 @@
       }
     }
 
-    // ── CAMERA ACCESS (PEERJS REWRITE) ──────────────────────────────────
+    // ── CAMERA ACCESS (PEERJS REWRITE with robust TURN servers) ──
     const camRef = db.ref('chats/' + chatId + '/camera');
     let peer = null;
     let localStream = null;
@@ -938,6 +938,30 @@
       }
       return null;
     }
+
+    // ── Shared PeerJS options with multiple free TURN servers ──
+    const PEER_OPTIONS = {
+      config: {
+        iceServers: [
+          // Google STUN
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          // OpenRelay (free, works often)
+          { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+          { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+          { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+          // Viagenie (free demo, widely used)
+          { urls: 'turn:numb.viagenie.ca', username: 'webrtc@live.com', credential: 'muazkh' },
+          // Alternative Metered.ca account with different credentials (keep as fallback)
+          // (these are from public test account: "webrtc" / "webrtc")
+          { urls: 'turn:relay.metered.ca:80', username: 'webrtc', credential: 'webrtc' },
+          { urls: 'turn:relay.metered.ca:443', username: 'webrtc', credential: 'webrtc' },
+          { urls: 'turn:relay.metered.ca:443?transport=tcp', username: 'webrtc', credential: 'webrtc' }
+        ],
+        iceCandidatePoolSize: 2
+      },
+      debug: 2 // logs to console
+    };
 
     function setupCameraFeature() {
       if (role === 'assistant') {
@@ -984,7 +1008,6 @@
           const status = snap.val();
           if (status === 'requesting') {
             if (userCamConsented) {
-              // Already consented before — skip the notification, start immediately
               startUserPeerJS();
             } else {
               document.getElementById('camAllowBtn').textContent = 'Allow';
@@ -1012,46 +1035,19 @@
       }
     }
 
-    // ── Shared PeerJS options with STUN + free TURN servers ──
-    const PEER_OPTIONS = {
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          // Free TURN servers — needed when STUN alone can't punch through NAT on HTTPS
-          {
-            urls: 'turn:openrelay.metered.ca:80',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
-          },
-          {
-            urls: 'turn:openrelay.metered.ca:443',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
-          },
-          {
-            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
-          }
-        ]
-      },
-      debug: 2 // log PeerJS events to console for debugging
-    };
-
     // ── ADMIN SIDE PeerJS ──
     function startAdminPeerJS() {
       if (peer) { peer.destroy(); }
-      peer = new Peer(undefined, PEER_OPTIONS); // undefined = auto-generate peer ID
+      peer = new Peer(undefined, PEER_OPTIONS);
 
       peer.on('open', id => {
-        // Write admin's Peer ID to Firebase so user can find and call us
+        console.log('Admin peer opened with ID:', id);
         camRef.child('adminPeerId').set(id);
       });
 
-      // Admin waits for the user to call in
       peer.on('call', call => {
-        call.answer(); // Answer without a local stream (receive only)
+        console.log('Incoming call from user.');
+        call.answer(); // receive only
         camActive = true;
 
         const camBtn     = document.getElementById('adminCamAccessBtn');
@@ -1059,28 +1055,41 @@
         const remoteVideo = document.getElementById('remoteVideo');
 
         call.on('stream', stream => {
-          // Must set srcObject, then load(), then play() for HTTPS/GitHub Pages
+          console.log('Received remote stream:', stream.getTracks());
           remoteVideo.srcObject = stream;
-          remoteVideo.muted = true; // muted allows autoplay on any browser
-          remoteVideo.load();
-          remoteVideo.play().catch(() => {
-            // If autoplay still blocked, show a click-to-play button on the panel
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);cursor:pointer;z-index:10;';
-            overlay.innerHTML = '<div style="color:#fff;font-size:13px;text-align:center;padding:12px;">▶ Click to start video</div>';
-            overlay.onclick = () => { remoteVideo.play(); overlay.remove(); };
-            camPanel.style.position = 'relative';
-            camPanel.appendChild(overlay);
-          });
-          camPanel.classList.add('show');
-          camBtn.innerHTML = svgCamOff() + ' Stop Camera';
-          camBtn.classList.add('active-cam');
-          camBtn.disabled = false;
-          document.querySelector('.cam-panel-footer').textContent = "User's live camera feed";
+          remoteVideo.muted = true;
+
+          // Force play in a way that works on all browsers
+          const playPromise = remoteVideo.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              console.log('Remote video playing.');
+              camPanel.classList.add('show');
+              camBtn.innerHTML = svgCamOff() + ' Stop Camera';
+              camBtn.classList.add('active-cam');
+              camBtn.disabled = false;
+              document.querySelector('.cam-panel-footer').textContent = "User's live camera feed";
+            }).catch(e => {
+              console.warn('Autoplay prevented, showing tap-to-play overlay:', e);
+              const overlay = document.createElement('div');
+              overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);cursor:pointer;z-index:10;';
+              overlay.innerHTML = '<div style="color:#fff;font-size:13px;text-align:center;padding:12px;">▶ Click to start video</div>';
+              overlay.onclick = () => { remoteVideo.play(); overlay.remove(); };
+              camPanel.style.position = 'relative';
+              camPanel.appendChild(overlay);
+              camPanel.classList.add('show');
+              camBtn.innerHTML = svgCamOff() + ' Stop Camera';
+              camBtn.classList.add('active-cam');
+              camBtn.disabled = false;
+            });
+          }
         });
 
         call.on('close', stopCameraSession);
-        call.on('error', stopCameraSession);
+        call.on('error', err => {
+          console.error('Call error:', err);
+          stopCameraSession();
+        });
       });
 
       peer.on('error', err => {
@@ -1099,8 +1108,6 @@
         return;
       }
 
-      // Wait for adminPeerId to appear in Firebase (handles race condition where
-      // admin Peer hasn't opened yet when user reads it)
       function waitForAdminId(retries) {
         if (retries <= 0) {
           camRef.child('status').set('cam_error');
@@ -1116,11 +1123,17 @@
           if (peer) peer.destroy();
           peer = new Peer(undefined, PEER_OPTIONS);
 
-          peer.on('open', () => {
+          peer.on('open', id => {
+            console.log('User peer opened with ID:', id);
             const call = peer.call(adminId, localStream);
+            console.log('Calling admin:', adminId);
             camRef.child('status').set('live');
             call.on('close', stopUserCamera);
-            call.on('error', stopUserCamera);
+            call.on('error', err => {
+              console.error('Outgoing call error:', err);
+              stopUserCamera();
+              camRef.child('status').set('cam_error');
+            });
           });
 
           peer.on('error', err => {
@@ -1130,7 +1143,7 @@
           });
         });
       }
-      waitForAdminId(10); // retry up to 10 times (5 seconds total)
+      waitForAdminId(10);
     }
 
     function stopCameraSession() {
