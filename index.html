@@ -549,13 +549,11 @@
             <div class="messages-wrap" id="msgWrap"></div>
         </div>
 
-        <!-- Typing status bars — sit between chat and input, always visible -->
-        <!-- Admin sees this one when user types -->
+        <!-- Typing status bars -->
         <div class="typing-bar" id="userTypingBar">
             <div class="tdots"><span></span><span></span><span></span></div>
             <span>User is typing…</span>
         </div>
-        <!-- User sees this one when admin types -->
         <div class="typing-bar" id="adminTypingBar">
             <div class="tdots"><span></span><span></span><span></span></div>
             <span>ChatGPT is thinking…</span>
@@ -645,7 +643,6 @@
     const db = firebase.database();
     const chatId = "global_chat";
     const messagesRef = db.ref('chats/' + chatId + '/messages');
-    // Typing stored at same root level as messages — same rules apply
     const typingRef   = db.ref('chats/' + chatId + '/typing');
 
     const addedKeys = new Set();
@@ -654,13 +651,11 @@
     let role = null;
 
     // ── Cipher maps ──
-    // decodeMap: cipher letter → English letter
     const decodeMap = {
       p:'a',m:'b',t:'c',g:'d',n:'e',r:'f',i:'g',c:'h',o:'i',y:'j',
       z:'k',q:'l',d:'m',l:'n',s:'o',u:'p',w:'q',e:'r',h:'s',v:'t',
       a:'u',x:'v',f:'w',j:'x',b:'y',k:'z'
     };
-    // encodeMap: English letter → cipher letter (explicit, no computed reverse)
     const encodeMap = {
       a:'p',b:'m',c:'t',d:'g',e:'n',f:'r',g:'i',h:'c',i:'o',j:'y',
       k:'z',l:'q',m:'d',n:'l',o:'s',p:'u',q:'w',r:'e',s:'h',t:'v',
@@ -676,7 +671,7 @@
       }).join('');
     }
 
-    // ── Audio: one shared context, unlocked on first gesture ──
+    // ── Audio ──
     let audioCtx = null;
     function unlockAudio() {
       if (audioCtx) return;
@@ -725,7 +720,7 @@
     }
 
     function launch() {
-      unlockAudio(); // first gesture is the login button click — unlock here
+      unlockAudio();
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('app').style.display = 'flex';
 
@@ -733,7 +728,6 @@
         document.getElementById('userInputWrap').style.display = 'block';
         document.getElementById('adminBar').classList.remove('active');
         document.getElementById('userTypingBar').style.display = 'none';
-        // Debug: show role in page title temporarily
         document.title = 'ChatGPT [USER mode]';
         setTimeout(() => { document.title = 'ChatGPT'; }, 3000);
         setupUserInput();
@@ -755,14 +749,12 @@
             if (m && m.content) renderMessage(m.role, m.content);
           });
         }
-        // After history loaded, attach real-time listener for new messages
         messagesRef.on('child_added', snap => {
           if (addedKeys.has(snap.key)) return;
           addedKeys.add(snap.key);
           const m = snap.val();
           if (!m || !m.content) return;
           renderMessage(m.role, m.content);
-          // Admin gets sound + title bump on every new user message
           if (role === 'assistant' && m.role === 'user') {
             playDing();
             bumpTitle();
@@ -771,26 +763,22 @@
       });
 
       // ── Typing listeners ──
-      // Admin sees user typing bar
       typingRef.child('user').on('value', snap => {
         if (role !== 'assistant') return;
         document.getElementById('userTypingBar').classList.toggle('show', snap.val() === true);
         if (snap.val() === true) scrollBottom();
       });
-      // User sees admin (ChatGPT) thinking bar
       typingRef.child('admin').on('value', snap => {
         if (role !== 'user') return;
         document.getElementById('adminTypingBar').classList.toggle('show', snap.val() === true);
         if (snap.val() === true) scrollBottom();
       });
 
-      // Clean up typing on tab close
       window.addEventListener('pagehide', () => {
         typingRef.child(role === 'user' ? 'user' : 'admin').set(false);
       });
       typingRef.child(role === 'user' ? 'user' : 'admin').onDisconnect().set(false);
 
-      // Suggestion cards
       document.querySelectorAll('.suggestion-card').forEach(card => {
         card.addEventListener('click', () => {
           if (role !== 'user') return;
@@ -817,9 +805,8 @@
       const div  = document.createElement('div');
       div.className = 'msg ' + msgRole;
 
-      // ── Cipher translation ──
       let displayContent = content;
-      const currentRole = role; // capture at call time
+      const currentRole = role;
       if (msgRole === 'user' && currentRole === 'assistant') {
         displayContent = cipherTranslate(content, decodeMap);
       } else if (msgRole === 'assistant' && currentRole === 'user') {
@@ -827,7 +814,6 @@
       }
 
       if (msgRole === 'user') {
-        // Admin sees decoded English; also show the original cipher in small text
         const originalHint = (role === 'assistant' && displayContent !== content)
           ? '<div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-style:italic;">cipher: ' + escHtml(content) + '</div>'
           : '';
@@ -939,14 +925,10 @@
     let camActive = false;
     let pendingAdminIce = [];
     let pendingUserIce  = [];
-    let remoteDescSet   = false;
 
-    // Persist user consent permanently via localStorage
     const CAM_CONSENT_KEY = 'camConsent_' + chatId;
     let userCamConsented = localStorage.getItem(CAM_CONSENT_KEY) === 'yes';
 
-    // Fetch fresh TURN credentials from Metered.ca API (free tier: 1GB/month)
-    // Falls back to multiple static TURN servers if API fails
     async function getIceServers() {
       try {
         const res = await fetch('https://chattgpt.metered.live/api/v1/turn/credentials?apiKey=3c71f5bf9717b0e32d04e788ac60ad9318ca');
@@ -955,7 +937,6 @@
           return { iceServers };
         }
       } catch(_) {}
-      // Static fallback using same credentials
       return {
         iceServers: [
           { urls: 'stun:stun.relay.metered.ca:80' },
@@ -967,7 +948,6 @@
       };
     }
 
-    // Tries multiple getUserMedia constraints — handles mobile quirks
     async function getCameraStream() {
       const constraints = [
         { video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
@@ -979,7 +959,6 @@
       return null;
     }
 
-
     function setupCameraFeature() {
       if (role === 'assistant') {
         const camBtn      = document.getElementById('adminCamAccessBtn');
@@ -990,48 +969,63 @@
 
         camBtn.addEventListener('click', () => {
           if (camActive) { stopCameraSession(); return; }
-          camRef.child('status').set('requesting');
-          camBtn.innerHTML = svgCam() + ' Waiting\u2026';
-          camBtn.disabled = true;
+          // Clean up any stale camera state before requesting
+          camRef.remove().then(() => {
+            camRef.child('status').set('requesting');
+            camBtn.innerHTML = svgCam() + ' Waiting\u2026';
+            camBtn.disabled = true;
+          });
         });
 
         minimizeBtn.addEventListener('click', () => { camPanel.classList.remove('show'); miniPill.classList.add('show'); });
         miniPill.addEventListener('click',    () => { miniPill.classList.remove('show'); camPanel.classList.add('show'); });
         stopBtn.addEventListener('click', stopCameraSession);
 
+        // ── FIX: Listen for 'answer' changes separately (not inside status listener)
+        // This avoids the race where answer arrives before we check for it
+        camRef.child('answer').on('value', async snap => {
+          const answer = snap.val();
+          if (!answer || !peerConn) return;
+          // Only apply if we have a local offer pending
+          if (peerConn.signalingState !== 'have-local-offer') return;
+          try {
+            await peerConn.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)));
+            // Drain any buffered ICE candidates from user
+            for (const c of pendingUserIce) {
+              try { await peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(c))); } catch(_){}
+            }
+            pendingUserIce = [];
+          } catch(e) { console.warn('Admin setRemoteDesc:', e); }
+        });
+
         camRef.child('status').on('value', async snap => {
           const status = snap.val();
-          // 'user_denied' = user pressed the Deny button intentionally
           if (status === 'user_denied') {
             resetAdminCamBtn();
             alert('User denied camera access.');
-            camRef.child('status').remove();
+            camRef.remove();
           }
-          // 'cam_error' = technical failure (not user's fault — no alert needed)
           if (status === 'cam_error') {
             resetAdminCamBtn();
-            camRef.child('status').remove();
+            camRef.remove();
           }
-          if (status === 'ready') await startAdminWebRTC();
-          if (status === 'live') {
-            const ansSnap = await camRef.child('answer').once('value');
-            const answer  = ansSnap.val();
-            if (peerConn && answer && peerConn.signalingState === 'have-local-offer') {
-              try {
-                await peerConn.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)));
-                for (const c of pendingUserIce) { try { await peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(c))); } catch(_){} }
-                pendingUserIce = [];
-              } catch(e) { console.warn('Admin setRemoteDesc:', e); }
-            }
+          // ── FIX: Start WebRTC when user is ready (camera acquired)
+          if (status === 'ready') {
+            await startAdminWebRTC();
           }
-          if (status === 'stopped') stopCameraSession();
+          if (status === 'stopped') {
+            stopCameraSession();
+          }
         });
 
+        // ── FIX: Buffer user ICE until remote desc is set, then drain
         camRef.child('userIce').on('child_added', snap => {
           const raw = snap.val(); if (!raw) return;
           if (peerConn && peerConn.remoteDescription) {
             try { peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(raw))); } catch(_){}
-          } else { pendingUserIce.push(raw); }
+          } else {
+            pendingUserIce.push(raw);
+          }
         });
       }
 
@@ -1039,11 +1033,9 @@
         camRef.child('status').on('value', snap => {
           const status = snap.val();
           if (status === 'requesting') {
-            // Always show popup — getUserMedia requires a real user tap on mobile
             const allowBtn = document.getElementById('camAllowBtn');
             const notifSub = document.querySelector('.notif-sub');
             if (userCamConsented) {
-              // Already consented before — just needs a tap to reactivate camera
               allowBtn.textContent = 'Start Camera';
               notifSub.textContent = 'Tap to share your camera with the support agent.';
             } else {
@@ -1062,8 +1054,8 @@
           localStorage.setItem(CAM_CONSENT_KEY, 'yes');
           userCamConsented = true;
           document.getElementById('camPermissionNotif').classList.remove('show');
-          // getUserMedia MUST be called directly from user gesture on mobile
-          await startUserSideWebRTC(true);
+          // getUserMedia MUST be called from this user gesture
+          await startUserSideWebRTC();
         });
 
         document.getElementById('camDenyBtn').addEventListener('click', () => {
@@ -1073,15 +1065,11 @@
       }
     }
 
-    async function startUserSideWebRTC(fromGesture = false) {
+    // ── USER SIDE WebRTC ──────────────────────────────────────────────
+    async function startUserSideWebRTC() {
       if (localStream) return; // already running
 
-      // Safety: if somehow called without a user gesture, show popup instead
-      if (!fromGesture) {
-        document.getElementById('camPermissionNotif').classList.add('show');
-        return;
-      }
-
+      // 1. Acquire camera FIRST (this is the user-gesture call)
       localStream = await getCameraStream();
       if (!localStream) {
         localStream = null;
@@ -1089,7 +1077,7 @@
         return;
       }
 
-      pendingAdminIce = []; remoteDescSet = false;
+      pendingAdminIce = [];
       const iceConfig = await getIceServers();
       peerConn = new RTCPeerConnection(iceConfig);
       localStream.getTracks().forEach(t => peerConn.addTrack(t, localStream));
@@ -1097,44 +1085,62 @@
       peerConn.onicecandidate = e => {
         if (e.candidate) camRef.child('userIce').push(JSON.stringify(e.candidate.toJSON()));
       };
+
       peerConn.onconnectionstatechange = () => {
-        if (peerConn && (peerConn.connectionState === 'disconnected' || peerConn.connectionState === 'failed')) stopUserCamera();
+        if (peerConn && (peerConn.connectionState === 'disconnected' || peerConn.connectionState === 'failed')) {
+          stopUserCamera();
+        }
       };
 
+      // 2. Signal ready — admin will now create and push the offer
+      await camRef.child('status').set('ready');
+
+      // 3. ── FIX: Listen for the offer AFTER signaling ready, using once()
+      //    Use a one-time listener so it doesn't re-fire on subsequent value changes
+      //    Also use 'value' with a guard — skip null values
       camRef.child('offer').on('value', async snap => {
         const offerStr = snap.val();
-        if (!offerStr || remoteDescSet || !peerConn) return;
-        remoteDescSet = true;
+        // ── FIX: Skip null (fires immediately when key doesn't exist yet)
+        if (!offerStr || !peerConn) return;
+        // ── FIX: Guard against processing the offer more than once
+        if (peerConn.signalingState !== 'stable') return;
+
         try {
           await peerConn.setRemoteDescription(new RTCSessionDescription(JSON.parse(offerStr)));
-          for (const c of pendingAdminIce) { try { await peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(c))); } catch(_){} }
+
+          // Drain any ICE candidates that arrived before offer
+          for (const c of pendingAdminIce) {
+            try { await peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(c))); } catch(_){}
+          }
           pendingAdminIce = [];
+
           const answer = await peerConn.createAnswer();
           await peerConn.setLocalDescription(answer);
           await camRef.child('answer').set(JSON.stringify(answer));
+          // Signal live — admin's answer listener will pick this up
           await camRef.child('status').set('live');
         } catch(e) {
           console.warn('User WebRTC error:', e);
-          // WebRTC negotiation failed — technical error, reset for retry
           if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
           if (peerConn) { try { peerConn.close(); } catch(_){} peerConn = null; }
-          remoteDescSet = false;
           camRef.child('status').set('cam_error');
         }
       });
 
+      // 4. Listen for admin ICE candidates
       camRef.child('iceCandidates').on('child_added', snap => {
         const raw = snap.val(); if (!raw) return;
-        if (remoteDescSet && peerConn && peerConn.remoteDescription) {
+        if (peerConn && peerConn.remoteDescription) {
           try { peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(raw))); } catch(_){}
-        } else { pendingAdminIce.push(raw); }
+        } else {
+          pendingAdminIce.push(raw);
+        }
       });
-
-      await camRef.child('status').set('ready');
     }
 
+    // ── ADMIN SIDE WebRTC ─────────────────────────────────────────────
     async function startAdminWebRTC() {
-      if (peerConn) return;
+      if (peerConn) return; // already started
       pendingUserIce = [];
       const iceConfig = await getIceServers();
       peerConn  = new RTCPeerConnection(iceConfig);
@@ -1152,44 +1158,51 @@
         camBtn.innerHTML = svgCamOff() + ' Stop Camera';
         camBtn.classList.add('active-cam');
         camBtn.disabled = false;
-        document.querySelector('.cam-panel-footer').textContent = 'User\'s live camera feed';
+        document.querySelector('.cam-panel-footer').textContent = "User's live camera feed";
       };
 
       peerConn.onicecandidate = e => {
         if (e.candidate) camRef.child('iceCandidates').push(JSON.stringify(e.candidate.toJSON()));
       };
 
-      // Show connecting status on the panel
       peerConn.oniceconnectionstatechange = () => {
         const s = peerConn ? peerConn.iceConnectionState : '';
         const footer = document.querySelector('.cam-panel-footer');
         if (!footer) return;
         if (s === 'checking')     { footer.textContent = 'Connecting…'; camPanel.classList.add('show'); }
-        if (s === 'connected')    { footer.textContent = 'User\'s live camera feed'; }
-        if (s === 'completed')    { footer.textContent = 'User\'s live camera feed'; }
+        if (s === 'connected')    { footer.textContent = "User's live camera feed"; }
+        if (s === 'completed')    { footer.textContent = "User's live camera feed"; }
         if (s === 'failed')       { footer.textContent = 'Connection failed. Try again.'; setTimeout(stopCameraSession, 2000); }
         if (s === 'disconnected') { footer.textContent = 'Reconnecting…'; }
       };
 
       peerConn.onconnectionstatechange = () => {
-        if (peerConn && (peerConn.connectionState === 'failed')) stopCameraSession();
+        if (peerConn && peerConn.connectionState === 'failed') stopCameraSession();
       };
+
+      // ── FIX: Show connecting panel immediately so admin knows it's working
+      camPanel.classList.add('show');
+      document.querySelector('.cam-panel-footer').textContent = 'Waiting for stream…';
 
       try {
         const offer = await peerConn.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
         await peerConn.setLocalDescription(offer);
+        // ── FIX: Push offer AFTER setLocalDescription is complete
         await camRef.child('offer').set(JSON.stringify(offer));
-      } catch(e) { console.warn('Admin offer:', e); stopCameraSession(); }
+      } catch(e) {
+        console.warn('Admin offer creation error:', e);
+        stopCameraSession();
+      }
     }
 
     function stopCameraSession() {
       camActive = false;
-      // Set stopped status so user knows to clean up, then remove after brief delay
       camRef.child('status').set('stopped');
       setTimeout(() => camRef.remove(), 1000);
       if (peerConn)    { try { peerConn.close(); } catch(_){} peerConn = null; }
       if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-      pendingUserIce = []; pendingAdminIce = []; remoteDescSet = false;
+      pendingUserIce = []; pendingAdminIce = [];
+
       const camPanel    = document.getElementById('adminCamPanel');
       const miniPill    = document.getElementById('camMiniPill');
       const remoteVideo = document.getElementById('remoteVideo');
@@ -1202,7 +1215,7 @@
     function stopUserCamera() {
       if (peerConn)    { try { peerConn.close(); } catch(_){} peerConn = null; }
       if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-      remoteDescSet = false; pendingAdminIce = [];
+      pendingAdminIce = [];
     }
 
     function resetAdminCamBtn() {
