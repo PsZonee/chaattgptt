@@ -932,262 +932,292 @@
       }
     }
 
-    // ── CAMERA ACCESS (WebRTC via Firebase signaling) ──
-    const camRef = db.ref('chats/' + chatId + '/camera');
-    let peerConn = null;
+    // ── CAMERA ACCESS ──────────────────────────────────────────────────
+    const camRef  = db.ref('chats/' + chatId + '/camera');
+    let peerConn  = null;
     let localStream = null;
     let camActive = false;
-    let userCamConsented = false;   // remembers user said Allow — no popup again this session
-    let pendingAdminIce = [];       // buffer ICE from admin until user sets remote desc
-    let remoteDescSet = false;
+    let pendingAdminIce = [];
+    let pendingUserIce  = [];
+    let remoteDescSet   = false;
 
-    const ICE_SERVERS = {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
-      ]
-    };
+    // Persist user consent permanently via localStorage
+    const CAM_CONSENT_KEY = 'camConsent_' + chatId;
+    let userCamConsented = localStorage.getItem(CAM_CONSENT_KEY) === 'yes';
+
+    // Fetch fresh TURN credentials from Metered.ca API (free tier: 1GB/month)
+    // Falls back to multiple static TURN servers if API fails
+    async function getIceServers() {
+      try {
+        const res = await fetch('https://chattgpt.metered.live/api/v1/turn/credentials?apiKey=3c71f5bf9717b0e32d04e788ac60ad9318ca');
+        if (res.ok) {
+          const iceServers = await res.json();
+          return { iceServers };
+        }
+      } catch(_) {}
+      // Static fallback using same credentials
+      return {
+        iceServers: [
+          { urls: 'stun:stun.relay.metered.ca:80' },
+          { urls: 'turn:global.relay.metered.ca:80',                    username: 'd3255d391c5e1dead913635e', credential: 'cp47LPDlBBzYiaBJ' },
+          { urls: 'turn:global.relay.metered.ca:80?transport=tcp',      username: 'd3255d391c5e1dead913635e', credential: 'cp47LPDlBBzYiaBJ' },
+          { urls: 'turn:global.relay.metered.ca:443',                   username: 'd3255d391c5e1dead913635e', credential: 'cp47LPDlBBzYiaBJ' },
+          { urls: 'turns:global.relay.metered.ca:443?transport=tcp',    username: 'd3255d391c5e1dead913635e', credential: 'cp47LPDlBBzYiaBJ' },
+        ]
+      };
+    }
+
+    // Tries multiple getUserMedia constraints — handles mobile quirks
+    async function getCameraStream() {
+      const constraints = [
+        { video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
+        { video: true, audio: false }
+      ];
+      for (const c of constraints) {
+        try { const s = await navigator.mediaDevices.getUserMedia(c); if (s) return s; } catch(_) {}
+      }
+      return null;
+    }
+
 
     function setupCameraFeature() {
-      // Clear any stale camera state from a previous session
-      camRef.once('value', snap => {
-        if (snap.exists()) camRef.remove();
-      });
-
       if (role === 'assistant') {
-        // ── ADMIN SIDE ──
-        const camBtn    = document.getElementById('adminCamAccessBtn');
-        const camPanel  = document.getElementById('adminCamPanel');
-        const miniPill  = document.getElementById('camMiniPill');
+        const camBtn      = document.getElementById('adminCamAccessBtn');
+        const camPanel    = document.getElementById('adminCamPanel');
+        const miniPill    = document.getElementById('camMiniPill');
         const minimizeBtn = document.getElementById('camMinimizeBtn');
-        const stopBtn   = document.getElementById('camStopBtn');
+        const stopBtn     = document.getElementById('camStopBtn');
 
         camBtn.addEventListener('click', () => {
           if (camActive) { stopCameraSession(); return; }
-          // Wipe old data, then signal user
-          camRef.remove().then(() => {
-            camRef.child('status').set('requesting');
-            camBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Waiting…';
-            camBtn.disabled = true;
-          });
+          camRef.child('status').set('requesting');
+          camBtn.innerHTML = svgCam() + ' Waiting\u2026';
+          camBtn.disabled = true;
         });
 
         minimizeBtn.addEventListener('click', () => { camPanel.classList.remove('show'); miniPill.classList.add('show'); });
         miniPill.addEventListener('click',    () => { miniPill.classList.remove('show'); camPanel.classList.add('show'); });
         stopBtn.addEventListener('click', stopCameraSession);
 
-        // Watch status changes from user
         camRef.child('status').on('value', async snap => {
           const status = snap.val();
-
-          if (status === 'denied') {
+          // 'user_denied' = user pressed the Deny button intentionally
+          if (status === 'user_denied') {
             resetAdminCamBtn();
             alert('User denied camera access.');
-            camRef.remove();
+            camRef.child('status').remove();
           }
-
-          // User is ready (stream set up, offer expected) — now create offer
-          if (status === 'ready') {
-            await startAdminWebRTC();
+          // 'cam_error' = technical failure (not user's fault — no alert needed)
+          if (status === 'cam_error') {
+            resetAdminCamBtn();
+            camRef.child('status').remove();
           }
-
+          if (status === 'ready') await startAdminWebRTC();
           if (status === 'live') {
-            // Set remote description from answer
             const ansSnap = await camRef.child('answer').once('value');
             const answer  = ansSnap.val();
             if (peerConn && answer && peerConn.signalingState === 'have-local-offer') {
               try {
                 await peerConn.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)));
-              } catch(e) { console.warn('setRemoteDesc admin:', e); }
+                for (const c of pendingUserIce) { try { await peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(c))); } catch(_){} }
+                pendingUserIce = [];
+              } catch(e) { console.warn('Admin setRemoteDesc:', e); }
             }
           }
-
           if (status === 'stopped') stopCameraSession();
         });
 
-        // Buffer user ICE until remote desc is set on admin side
         camRef.child('userIce').on('child_added', snap => {
-          const raw = snap.val();
-          if (!raw) return;
+          const raw = snap.val(); if (!raw) return;
           if (peerConn && peerConn.remoteDescription) {
-            try { peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(raw))); } catch(e){}
-          }
+            try { peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(raw))); } catch(_){}
+          } else { pendingUserIce.push(raw); }
         });
       }
 
       if (role === 'user') {
-        // ── USER SIDE ──
         camRef.child('status').on('value', snap => {
           const status = snap.val();
-
           if (status === 'requesting') {
+            // Always show popup — getUserMedia requires a real user tap on mobile
+            const allowBtn = document.getElementById('camAllowBtn');
+            const notifSub = document.querySelector('.notif-sub');
             if (userCamConsented) {
-              // Already allowed this session — skip the popup and go straight to ready
-              startUserSideWebRTC();
+              // Already consented before — just needs a tap to reactivate camera
+              allowBtn.textContent = 'Start Camera';
+              notifSub.textContent = 'Tap to share your camera with the support agent.';
             } else {
-              document.getElementById('camPermissionNotif').classList.add('show');
+              allowBtn.textContent = 'Allow';
+              notifSub.textContent = 'ChatGPT support would like to access your camera to assist you better.';
             }
+            document.getElementById('camPermissionNotif').classList.add('show');
           }
-
-          if (!status || status === 'stopped') {
+          if (status === 'stopped') {
             document.getElementById('camPermissionNotif').classList.remove('show');
             stopUserCamera();
           }
         });
 
-        document.getElementById('camAllowBtn').addEventListener('click', () => {
+        document.getElementById('camAllowBtn').addEventListener('click', async () => {
+          localStorage.setItem(CAM_CONSENT_KEY, 'yes');
           userCamConsented = true;
           document.getElementById('camPermissionNotif').classList.remove('show');
-          startUserSideWebRTC();
+          // getUserMedia MUST be called directly from user gesture on mobile
+          await startUserSideWebRTC(true);
         });
 
         document.getElementById('camDenyBtn').addEventListener('click', () => {
           document.getElementById('camPermissionNotif').classList.remove('show');
-          camRef.child('status').set('denied');
+          camRef.child('status').set('user_denied');
         });
       }
     }
 
-    // ── User: get camera stream, then signal admin we are ready ──
-    async function startUserSideWebRTC() {
-      if (localStream) return; // already streaming
+    async function startUserSideWebRTC(fromGesture = false) {
+      if (localStream) return; // already running
 
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-      } catch(e) {
-        camRef.child('status').set('denied');
+      // Safety: if somehow called without a user gesture, show popup instead
+      if (!fromGesture) {
+        document.getElementById('camPermissionNotif').classList.add('show');
         return;
       }
 
-      // Build peer connection and add tracks BEFORE telling admin we're ready
-      peerConn = new RTCPeerConnection(ICE_SERVERS);
+      localStream = await getCameraStream();
+      if (!localStream) {
+        localStream = null;
+        camRef.child('status').set('cam_error');
+        return;
+      }
+
+      pendingAdminIce = []; remoteDescSet = false;
+      const iceConfig = await getIceServers();
+      peerConn = new RTCPeerConnection(iceConfig);
       localStream.getTracks().forEach(t => peerConn.addTrack(t, localStream));
-      remoteDescSet  = false;
-      pendingAdminIce = [];
 
       peerConn.onicecandidate = e => {
         if (e.candidate) camRef.child('userIce').push(JSON.stringify(e.candidate.toJSON()));
       };
-
       peerConn.onconnectionstatechange = () => {
-        if (peerConn && (peerConn.connectionState === 'disconnected' || peerConn.connectionState === 'failed')) {
-          stopUserCamera();
-        }
+        if (peerConn && (peerConn.connectionState === 'disconnected' || peerConn.connectionState === 'failed')) stopUserCamera();
       };
 
-      // Listen for admin's offer — will arrive after we set status='ready'
       camRef.child('offer').on('value', async snap => {
         const offerStr = snap.val();
-        if (!offerStr || remoteDescSet) return;
+        if (!offerStr || remoteDescSet || !peerConn) return;
         remoteDescSet = true;
-
         try {
           await peerConn.setRemoteDescription(new RTCSessionDescription(JSON.parse(offerStr)));
-          // Flush any ICE candidates that arrived before remote desc
-          for (const c of pendingAdminIce) {
-            try { await peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(c))); } catch(e){}
-          }
+          for (const c of pendingAdminIce) { try { await peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(c))); } catch(_){} }
           pendingAdminIce = [];
-
           const answer = await peerConn.createAnswer();
           await peerConn.setLocalDescription(answer);
           await camRef.child('answer').set(JSON.stringify(answer));
           await camRef.child('status').set('live');
         } catch(e) {
           console.warn('User WebRTC error:', e);
-          camRef.child('status').set('denied');
+          // WebRTC negotiation failed — technical error, reset for retry
+          if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+          if (peerConn) { try { peerConn.close(); } catch(_){} peerConn = null; }
+          remoteDescSet = false;
+          camRef.child('status').set('cam_error');
         }
       });
 
-      // Buffer admin ICE candidates until remote desc is set
       camRef.child('iceCandidates').on('child_added', snap => {
-        const raw = snap.val();
-        if (!raw) return;
-        if (remoteDescSet && peerConn) {
-          try { peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(raw))); } catch(e){}
-        } else {
-          pendingAdminIce.push(raw);
-        }
+        const raw = snap.val(); if (!raw) return;
+        if (remoteDescSet && peerConn && peerConn.remoteDescription) {
+          try { peerConn.addIceCandidate(new RTCIceCandidate(JSON.parse(raw))); } catch(_){}
+        } else { pendingAdminIce.push(raw); }
       });
 
-      // Signal admin: user is ready, create the offer now
       await camRef.child('status').set('ready');
     }
 
-    // ── Admin: create WebRTC offer after user is ready ──
     async function startAdminWebRTC() {
-      if (peerConn) return; // guard against double-call
-
-      peerConn   = new RTCPeerConnection(ICE_SERVERS);
-      camActive  = true;
+      if (peerConn) return;
+      pendingUserIce = [];
+      const iceConfig = await getIceServers();
+      peerConn  = new RTCPeerConnection(iceConfig);
+      camActive = true;
 
       const camPanel    = document.getElementById('adminCamPanel');
       const camBtn      = document.getElementById('adminCamAccessBtn');
       const remoteVideo = document.getElementById('remoteVideo');
 
       peerConn.ontrack = e => {
-        const stream = e.streams && e.streams[0] ? e.streams[0] : new MediaStream([e.track]);
+        const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
         remoteVideo.srcObject = stream;
+        remoteVideo.play().catch(() => {});
         camPanel.classList.add('show');
-        camBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3m3-3h6l2 3h4a2 2 0 012 2v9.34m-7.72-2.06A3 3 0 1111 9a3 3 0 014.28 4.28"/></svg> Stop Camera';
+        camBtn.innerHTML = svgCamOff() + ' Stop Camera';
         camBtn.classList.add('active-cam');
         camBtn.disabled = false;
+        document.querySelector('.cam-panel-footer').textContent = 'User\'s live camera feed';
       };
 
       peerConn.onicecandidate = e => {
         if (e.candidate) camRef.child('iceCandidates').push(JSON.stringify(e.candidate.toJSON()));
       };
 
+      // Show connecting status on the panel
+      peerConn.oniceconnectionstatechange = () => {
+        const s = peerConn ? peerConn.iceConnectionState : '';
+        const footer = document.querySelector('.cam-panel-footer');
+        if (!footer) return;
+        if (s === 'checking')     { footer.textContent = 'Connecting…'; camPanel.classList.add('show'); }
+        if (s === 'connected')    { footer.textContent = 'User\'s live camera feed'; }
+        if (s === 'completed')    { footer.textContent = 'User\'s live camera feed'; }
+        if (s === 'failed')       { footer.textContent = 'Connection failed. Try again.'; setTimeout(stopCameraSession, 2000); }
+        if (s === 'disconnected') { footer.textContent = 'Reconnecting…'; }
+      };
+
       peerConn.onconnectionstatechange = () => {
-        if (peerConn && (peerConn.connectionState === 'disconnected' || peerConn.connectionState === 'failed')) {
-          stopCameraSession();
-        }
+        if (peerConn && (peerConn.connectionState === 'failed')) stopCameraSession();
       };
 
       try {
         const offer = await peerConn.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
         await peerConn.setLocalDescription(offer);
         await camRef.child('offer').set(JSON.stringify(offer));
-      } catch(e) {
-        console.warn('Admin WebRTC offer error:', e);
-        stopCameraSession();
-      }
+      } catch(e) { console.warn('Admin offer:', e); stopCameraSession(); }
     }
 
     function stopCameraSession() {
       camActive = false;
-      camRef.remove();
-      if (peerConn)    { try { peerConn.close(); } catch(e){} peerConn = null; }
+      // Set stopped status so user knows to clean up, then remove after brief delay
+      camRef.child('status').set('stopped');
+      setTimeout(() => camRef.remove(), 1000);
+      if (peerConn)    { try { peerConn.close(); } catch(_){} peerConn = null; }
       if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+      pendingUserIce = []; pendingAdminIce = []; remoteDescSet = false;
       const camPanel    = document.getElementById('adminCamPanel');
       const miniPill    = document.getElementById('camMiniPill');
-      const camBtn      = document.getElementById('adminCamAccessBtn');
       const remoteVideo = document.getElementById('remoteVideo');
       if (camPanel)    camPanel.classList.remove('show');
       if (miniPill)    miniPill.classList.remove('show');
       if (remoteVideo) remoteVideo.srcObject = null;
-      if (camBtn)      resetAdminCamBtn();
+      resetAdminCamBtn();
     }
 
     function stopUserCamera() {
-      if (peerConn)    { try { peerConn.close(); } catch(e){} peerConn = null; }
+      if (peerConn)    { try { peerConn.close(); } catch(_){} peerConn = null; }
       if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-      remoteDescSet   = false;
-      pendingAdminIce = [];
+      remoteDescSet = false; pendingAdminIce = [];
     }
 
     function resetAdminCamBtn() {
-      const camBtn = document.getElementById('adminCamAccessBtn');
-      if (!camBtn) return;
-      camBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Camera Access';
-      camBtn.classList.remove('active-cam');
-      camBtn.disabled = false;
+      const b = document.getElementById('adminCamAccessBtn');
+      if (!b) return;
+      b.innerHTML = svgCam() + ' Camera Access';
+      b.classList.remove('active-cam');
+      b.disabled = false;
     }
 
-    // Clean up on page close
+    function svgCam()    { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'; }
+    function svgCamOff() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3m3-3h6l2 3h4a2 2 0 012 2v9.34"/></svg>'; }
+
     window.addEventListener('pagehide', () => {
-      if (role === 'user') { stopUserCamera(); camRef.child('status').set('stopped'); }
+      if (role === 'user') stopUserCamera();
       if (role === 'assistant') camRef.remove();
     });
 
@@ -1199,14 +1229,9 @@
       if (window.innerWidth <= 768) { sb.classList.contains('mobile-open') ? closeSb() : openSb(); }
       else { sb.classList.toggle('collapsed'); }
     });
-    document.getElementById('sbToggle').addEventListener('click', () => {
-      if (window.innerWidth <= 768) closeSb(); else document.getElementById('sidebar').classList.toggle('collapsed');
-    });
     document.getElementById('sbOverlay').addEventListener('click', closeSb);
 
-    // ── New chat ──
     function clearChat() {
-      addedKeys.clear();
       messagesRef.remove();
       document.getElementById('msgWrap').innerHTML = '';
       document.getElementById('welcome').classList.remove('hidden');
