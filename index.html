@@ -1012,15 +1012,31 @@
       }
     }
 
-    // ── Shared PeerJS options with STUN servers ──
+    // ── Shared PeerJS options with STUN + free TURN servers ──
     const PEER_OPTIONS = {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun.cloudflare.com:3478' }
+          // Free TURN servers — needed when STUN alone can't punch through NAT on HTTPS
+          {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          }
         ]
-      }
+      },
+      debug: 2 // log PeerJS events to console for debugging
     };
 
     // ── ADMIN SIDE PeerJS ──
@@ -1043,8 +1059,19 @@
         const remoteVideo = document.getElementById('remoteVideo');
 
         call.on('stream', stream => {
+          // Must set srcObject, then load(), then play() for HTTPS/GitHub Pages
           remoteVideo.srcObject = stream;
-          remoteVideo.play().catch(() => {});
+          remoteVideo.muted = true; // muted allows autoplay on any browser
+          remoteVideo.load();
+          remoteVideo.play().catch(() => {
+            // If autoplay still blocked, show a click-to-play button on the panel
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);cursor:pointer;z-index:10;';
+            overlay.innerHTML = '<div style="color:#fff;font-size:13px;text-align:center;padding:12px;">▶ Click to start video</div>';
+            overlay.onclick = () => { remoteVideo.play(); overlay.remove(); };
+            camPanel.style.position = 'relative';
+            camPanel.appendChild(overlay);
+          });
           camPanel.classList.add('show');
           camBtn.innerHTML = svgCamOff() + ' Stop Camera';
           camBtn.classList.add('active-cam');
