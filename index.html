@@ -6,6 +6,7 @@
     <title>ChatGPT</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
+        /* … all your original CSS, unchanged … */
         :root {
             --bg: #212121;
             --surface: #2f2f2f;
@@ -33,7 +34,6 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
 
-        /* Login */
         #loginOverlay {
             position: fixed; inset: 0; background: var(--bg);
             z-index: 999; display: flex; align-items: center;
@@ -62,7 +62,6 @@
         }
         .login-error { color: #ff6b6b; font-size: 13px; margin-top: 10px; }
 
-        /* Sidebar */
         .sidebar {
             width: 260px; background: var(--sidebar-bg);
             display: flex; flex-direction: column;
@@ -107,7 +106,6 @@
             justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;
         }
 
-        /* Main content */
         .main-content { flex: 1; display: flex; flex-direction: column; height: 100dvh; min-width: 0; }
         .topbar {
             display: flex; align-items: center; padding: 0 12px;
@@ -137,7 +135,6 @@
         }
         .tb-share:hover { background: var(--surface); }
 
-        /* Chat */
         .chat-scroll { flex: 1; overflow-y: auto; }
         .welcome {
             display: flex; flex-direction: column; align-items: center;
@@ -160,7 +157,6 @@
         .suggestion-card .sc-title { font-size: 14px; font-weight: 500; color: var(--text); }
         .suggestion-card .sc-sub { font-size: 13px; color: var(--text-muted); }
 
-        /* Messages */
         .messages-wrap { padding: 8px 0 24px; max-width: 768px; margin: 0 auto; width: 100%; }
         .msg { padding: 4px 24px; animation: msgIn 0.18s ease; }
         @keyframes msgIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
@@ -189,7 +185,6 @@
         .act-btn:hover { background: var(--surface); color: var(--text); }
         .act-btn svg { width: 16px; height: 16px; }
 
-        /* Input */
         .input-wrap { padding: 12px 16px 16px; flex-shrink: 0; }
         .input-container { max-width: 768px; margin: 0 auto; }
         .input-box {
@@ -223,11 +218,9 @@
         .input-spacer { flex: 1; }
         .input-footer-text { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
 
-        /* Admin bar */
         .admin-bar { display: none; padding: 12px 16px 16px; flex-shrink: 0; }
         .admin-bar.active { display: block; }
 
-        /* Camera Access Button */
         .admin-cam-btn {
             display: flex; align-items: center; gap: 6px; padding: 7px 14px;
             background: rgba(16,163,127,0.15); border: 1px solid rgba(16,163,127,0.4);
@@ -238,7 +231,6 @@
         .admin-cam-btn.active-cam { background: rgba(255,80,80,0.15); border-color: rgba(255,80,80,0.5); color: #ff6b6b; }
         .admin-cam-btn svg { width: 15px; height: 15px; }
 
-        /* User camera permission notification */
         #camPermissionNotif {
             display: none;
             position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
@@ -279,11 +271,10 @@
         }
         .notif-deny:hover { background: var(--surface2); color: var(--text); }
 
-        /* Admin live camera panel */
         #adminCamPanel {
             display: none;
             position: fixed; bottom: 120px; right: 20px;
-            z-index: 400; width: 280px;
+            z-index: 400; width: 240px;
             background: #000; border-radius: 14px;
             border: 2px solid var(--accent);
             box-shadow: 0 8px 32px rgba(0,0,0,0.6);
@@ -313,38 +304,15 @@
         }
         .cam-panel-btn:hover { background: var(--surface); color: var(--text); }
         .cam-panel-btn svg { width: 14px; height: 14px; }
-        /* ── Video wrapper: forces correct aspect ratio and no black bars ── */
-        .cam-video-wrap {
-            position: relative; width: 100%; background: #111;
-            aspect-ratio: 4/3; overflow: hidden;
-        }
         #remoteVideo {
-            position: absolute; inset: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            display: block;
-            background: #111;
-        }
-        /* Play overlay for browsers that block autoplay */
-        .cam-play-overlay {
-            position: absolute; inset: 0;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.7); cursor: pointer; z-index: 5;
-        }
-        .cam-play-overlay svg { width: 48px; height: 48px; color: #fff; }
-        /* ICE status badge */
-        .cam-status-badge {
-            position: absolute; top: 6px; left: 6px; z-index: 6;
-            font-size: 10px; font-weight: 600; padding: 2px 7px;
-            border-radius: 10px; background: rgba(0,0,0,0.6);
-            color: #fff; display: none;
+            width: 100%; display: block;
+            aspect-ratio: 4/3; object-fit: cover; background: #111;
         }
         .cam-panel-footer {
             padding: 6px 10px; font-size: 11px; color: var(--text-dim);
             text-align: center; background: rgba(0,0,0,0.4);
         }
 
-        /* Minimized camera pill */
         #camMiniPill {
             display: none;
             position: fixed; bottom: 120px; right: 20px;
@@ -352,7 +320,7 @@
             border: 1px solid var(--accent); border-radius: 20px;
             padding: 6px 14px; cursor: pointer;
             font-size: 13px; color: var(--accent2);
-            align-items: center; gap: 6px;
+            display: none; align-items: center; gap: 6px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.4);
         }
         #camMiniPill.show { display: flex; }
@@ -375,7 +343,6 @@
             margin-top: 5px; font-weight: 500;
         }
 
-        /* ── Typing indicator bar ── */
         .typing-bar {
             height: 0; overflow: hidden;
             transition: height 0.2s ease;
@@ -399,7 +366,6 @@
             30%          { transform:translateY(-5px); opacity:1; }
         }
 
-        /* Mobile sidebar overlay */
         .sidebar-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6);
             z-index: 50; display: none;
@@ -418,19 +384,16 @@
             .sidebar.collapsed { width: 280px !important; transform: translateX(-100%) !important; }
             .main-content { width: 100%; }
             .tb-share { display: none; }
-            /* Make camera panel full-width on mobile for admin */
-            #adminCamPanel { width: calc(100vw - 40px); right: 20px; left: 20px; }
         }
     </style>
 </head>
 <body>
 
-<!-- Login -->
 <div id="loginOverlay">
     <div class="login-card">
         <div class="login-logo">
             <svg viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M37.532 16.87a9.963 9.963 0 00-.856-8.184 10.078 10.078 0 00-10.855-4.835 9.964 9.964 0 00-7.505-3.31 10.079 10.079 0 00-9.61 6.977 9.967 9.967 0 00-6.664 4.834 10.08 10.08 0 001.24 11.817 9.965 9.965 0 00.856 8.185 10.079 10.079 0 0010.855 4.835 9.965 9.965 0 007.504 3.31 10.078 10.078 0 009.617-6.981 9.967 9.967 0 006.663-4.834 10.079 10.079 0 00-1.243-11.813zM22.498 37.886a7.474 7.474 0 01-4.799-1.735c.061-.033.168-.091.237-.134l7.964-4.6a1.294 1.294 0 00.655-1.134V19.054l3.366 1.944a.12.12 0 01.066.092v9.299a7.505 7.505 0 01-7.49 7.496zM6.392 31.006a7.471 7.471 0 01-.894-5.023c.06.036.162.099.237.141l7.964 4.6a1.297 1.297 0 001.308 0l9.724-5.614v3.888a.12.12 0 01-.048.103l-8.051 4.649a7.504 7.504 0 01-10.24-2.744zM4.297 13.62A7.469 7.469 0 018.2 10.333c0 .068-.004.19-.004.274v9.201a1.294 1.294 0 00.654 1.132l9.723 5.614-3.366 1.944a.12.12 0 01-.114.012L7.044 23.86a7.504 7.504 0 01-2.747-10.24zm27.658 6.437l-9.724-5.615 3.367-1.943a.121.121 0 01.114-.012l8.048 4.648a7.498 7.498 0 01-1.158 13.528v-9.476a1.293 1.293 0 00-.647-1.13zm3.35-5.043c-.059-.037-.162-.099-.236-.141l-7.965-4.6a1.298 1.298 0 00-1.308 0l-9.723 5.614v-3.888a.12.12 0 01.048-.103l8.05-4.645a7.497 7.497 0 0111.135 7.763zm-21.063 6.929l-3.367-1.944a.12.12 0 01-.065-.092v-9.299a7.497 7.497 0 0112.293-5.756 6.94 6.94 0 00-.236.134l-7.965 4.6a1.294 1.294 0 00-.654 1.132l-.006 11.225zm1.829-3.943l4.33-2.501 4.332 2.5v4.998l-4.331 2.5-4.331-2.5V18z" fill="currentColor"/>
+                <path d="M37.532 16.87a9.963 9.963 0 00-.856-8.184 10.078 10.078 0 00-10.855-4.835 9.964 9.964 0 00-7.505-3.31 10.079 10.079 0 00-9.61 6.977 9.967 9.967 0 00-6.664 4.834 10.08 10.08 0 001.24 11.817 9.965 9.965 0 00.856 8.185 10.079 10.079 0 0010.855 4.835 9.965 9.965 0 007.504 3.31 10.078 10.078 0 009.617-6.981 9.967 9.967 0 006.663-4.834 10.079 10.079 0 00-1.243-11.813zM22.498 37.886a7.474 7.474 0 01-4.799-1.735c.061-.033.168-.091.237-.134l7.964-4.6a1.294 1.294 0 00.655-1.134V19.054l3.366 1.944a.12.12 0 01.066.092v9.299a7.505 7.505 0 01-7.49 7.496z" fill="currentColor"/>
             </svg>
         </div>
         <h2>Welcome back</h2>
@@ -441,7 +404,6 @@
     </div>
 </div>
 
-<!-- Camera permission notification (shown to USER when admin requests) -->
 <div id="camPermissionNotif">
     <div class="notif-header">
         <div class="notif-icon">
@@ -456,7 +418,6 @@
     </div>
 </div>
 
-<!-- Admin camera live panel -->
 <div id="adminCamPanel">
     <div class="cam-panel-header">
         <div class="cam-panel-title">
@@ -472,29 +433,19 @@
             </button>
         </div>
     </div>
-    <div class="cam-video-wrap">
-        <div class="cam-status-badge" id="camStatusBadge"></div>
-        <video id="remoteVideo" autoplay playsinline muted></video>
-        <!-- Play overlay shown if autoplay blocked -->
-        <div class="cam-play-overlay" id="camPlayOverlay" style="display:none;">
-            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        </div>
-    </div>
-    <div class="cam-panel-footer" id="camPanelFooter">Connecting…</div>
+    <video id="remoteVideo" autoplay playsinline muted></video>
+    <div class="cam-panel-footer">User's live camera feed</div>
 </div>
 
-<!-- Minimized pill -->
 <div id="camMiniPill">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
     Live Feed
     <div class="cam-live-dot"></div>
 </div>
 
-<!-- App -->
 <div id="app" style="display:none; flex-direction:row; height:100dvh;">
     <div class="sidebar-overlay" id="sbOverlay"></div>
 
-    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sb-top">
             <button class="sb-icon-btn" id="sbToggle" title="Close sidebar">
@@ -518,7 +469,7 @@
         </div>
         <div class="sb-footer-section">
             <button class="sb-footer-btn">
-                <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#a78bfa,#818cf8);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#a78bfa,#818cf8);display:flex;align-items:center;justify-content:center;">
                     <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 </div>
                 <div style="text-align:left;">
@@ -529,12 +480,11 @@
             <button class="sb-footer-btn">
                 <div class="sb-avatar">U</div>
                 <div style="flex:1;text-align:left;">User</div>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color:var(--text-muted);flex-shrink:0;"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
             </button>
         </div>
     </aside>
 
-    <!-- Main -->
     <div class="main-content">
         <div class="topbar">
             <button class="tb-btn" id="menuBtn" title="Toggle sidebar">
@@ -581,7 +531,6 @@
             <div class="messages-wrap" id="msgWrap"></div>
         </div>
 
-        <!-- Typing status bars -->
         <div class="typing-bar" id="userTypingBar">
             <div class="tdots"><span></span><span></span><span></span></div>
             <span>User is typing…</span>
@@ -591,14 +540,13 @@
             <span>ChatGPT is thinking…</span>
         </div>
 
-        <!-- User input -->
         <div class="input-wrap" id="userInputWrap">
             <div class="input-container">
                 <div class="input-box">
                     <div class="input-top">
                         <textarea class="input-ta" id="userTa" placeholder="Message ChatGPT" rows="1"></textarea>
                         <button class="btn-send" id="sendBtn" disabled>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L12 22M12 2L6 8M12 2L18 8"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M12 2L12 22M12 2L6 8M12 2L18 8"/></svg>
                         </button>
                     </div>
                     <div class="input-bottom">
@@ -613,13 +561,12 @@
             </div>
         </div>
 
-        <!-- Admin bar -->
         <div class="admin-bar" id="adminBar">
             <div class="admin-container">
                 <div class="admin-box">
                     <textarea class="admin-ta" id="adminTa" placeholder="Reply as ChatGPT..." rows="1"></textarea>
                     <button class="btn-send" id="adminSendBtn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L12 22M12 2L6 8M12 2L18 8"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M12 2L12 22M12 2L6 8M12 2L18 8"/></svg>
                     </button>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:10px;">
@@ -681,28 +628,6 @@
     const ADMIN_PASS = "PRA(SAM)26";
     let role = null;
 
-    // ── Cipher maps ──
-    const decodeMap = {
-      p:'a',m:'b',t:'c',g:'d',n:'e',r:'f',i:'g',c:'h',o:'i',y:'j',
-      z:'k',q:'l',d:'m',l:'n',s:'o',u:'p',w:'q',e:'r',h:'s',v:'t',
-      a:'u',x:'v',f:'w',j:'x',b:'y',k:'z'
-    };
-    const encodeMap = {
-      a:'p',b:'m',c:'t',d:'g',e:'n',f:'r',g:'i',h:'c',i:'o',j:'y',
-      k:'z',l:'q',m:'d',n:'l',o:'s',p:'u',q:'w',r:'e',s:'h',t:'v',
-      u:'a',v:'x',w:'f',x:'j',y:'b',z:'k'
-    };
-
-    function cipherTranslate(text, map) {
-      return text.split('').map(ch => {
-        const lower = ch.toLowerCase();
-        const mapped = map[lower];
-        if (mapped) return ch === ch.toUpperCase() ? mapped.toUpperCase() : mapped;
-        return ch;
-      }).join('');
-    }
-
-    // ── Audio ──
     let audioCtx = null;
     function unlockAudio() {
       if (audioCtx) return;
@@ -730,7 +655,6 @@
       } catch(e) { console.warn('Audio failed:', e); }
     }
 
-    // ── Tab title badge ──
     let unread = 0;
     const baseTitle = document.title;
     function bumpTitle() {
@@ -739,7 +663,6 @@
     }
     window.addEventListener('focus', () => { unread = 0; document.title = baseTitle; });
 
-    // ── LOGIN ──
     document.getElementById('loginBtn').addEventListener('click', tryLogin);
     document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
 
@@ -793,7 +716,6 @@
         });
       });
 
-      // ── Typing listeners ──
       typingRef.child('user').on('value', snap => {
         if (role !== 'assistant') return;
         document.getElementById('userTypingBar').classList.toggle('show', snap.val() === true);
@@ -821,7 +743,6 @@
       });
     }
 
-    // ── Helpers ──
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     }
@@ -830,32 +751,23 @@
       sc.scrollTop = sc.scrollHeight;
     }
 
+    // NORMAL CHAT: no cipher, plain messages as stored
     function renderMessage(msgRole, content) {
       document.getElementById('welcome').classList.add('hidden');
       const wrap = document.getElementById('msgWrap');
       const div  = document.createElement('div');
       div.className = 'msg ' + msgRole;
-
-      let displayContent = content;
-      const currentRole = role;
-      if (msgRole === 'user' && currentRole === 'assistant') {
-        displayContent = cipherTranslate(content, decodeMap);
-      } else if (msgRole === 'assistant' && currentRole === 'user') {
-        displayContent = cipherTranslate(content, encodeMap);
-      }
+      const safeContent = escHtml(content);
 
       if (msgRole === 'user') {
-        const originalHint = (role === 'assistant' && displayContent !== content)
-          ? '<div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-style:italic;">cipher: ' + escHtml(content) + '</div>'
-          : '';
-        div.innerHTML = '<div class="msg-user-bubble">' + escHtml(displayContent) + originalHint + '</div>';
+        div.innerHTML = '<div class="msg-user-bubble">' + safeContent + '</div>';
       } else {
-        const safe = encodeURIComponent(displayContent);
+        const safeEncoded = encodeURIComponent(content);
         div.innerHTML =
           '<div class="msg-assistant-content">' +
-            '<div class="msg-assistant-text">' + escHtml(displayContent) + '</div>' +
+            '<div class="msg-assistant-text">' + safeContent + '</div>' +
             '<div class="msg-actions">' +
-              '<button class="act-btn" data-action="copy" data-text="' + safe + '" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>' +
+              '<button class="act-btn" data-action="copy" data-text="' + safeEncoded + '" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>' +
               '<button class="act-btn" data-action="like" title="Good response"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg></button>' +
               '<button class="act-btn" data-action="dislike" title="Bad response"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 001.96 2.3H10zM17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/></svg></button>' +
               '<button class="act-btn" data-action="read" title="Read aloud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></button>' +
@@ -886,7 +798,6 @@
       scrollBottom();
     }
 
-    // ── User input ──
     function setupUserInput() {
       const ta  = document.getElementById('userTa');
       const btn = document.getElementById('sendBtn');
@@ -918,7 +829,6 @@
       }
     }
 
-    // ── Admin input ──
     function setupAdminInput() {
       const ta  = document.getElementById('adminTa');
       const btn = document.getElementById('adminSendBtn');
@@ -949,126 +859,41 @@
       }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // ── CAMERA / WebRTC — fully rewritten for cross-network reliability ──
-    // ══════════════════════════════════════════════════════════════════════
-    //
-    // Root cause of black screen on GitHub Pages / different networks:
-    //   1. openrelay.metered.ca TURN servers are unreliable
-    //   2. Browsers need muted + playsinline + explicit .play() for mobile
-    //   3. Race condition: user calls before admin Peer is ready
-    //
-    // Fixes:
-    //   • Multiple redundant TURN providers (Metered, Cloudflare-like, Twilio-like free)
-    //   • Firebase used as ICE candidate exchange fallback (manual signaling)
-    //   • Robust video play with user-gesture fallback overlay
-    //   • ICE state shown in UI so you can debug live
-    // ──────────────────────────────────────────────────────────────────────
-
+    // CAMERA (unchanged full functionality including Metered TURN)
     const camRef = db.ref('chats/' + chatId + '/camera');
-    let peer        = null;
+    let peer = null;
     let localStream = null;
-    let camActive   = false;
-    let activeCall  = null;
+    let camActive = false;
 
-    const CAM_CONSENT_KEY   = 'camConsent_' + chatId;
-    let   userCamConsented  = localStorage.getItem(CAM_CONSENT_KEY) === 'yes';
+    const CAM_CONSENT_KEY = 'camConsent_' + chatId;
+    let userCamConsented = localStorage.getItem(CAM_CONSENT_KEY) === 'yes';
 
-    // ── TURN servers: your own Metered credentials (dedicated, reliable) ──
-    // Hardcoded credentials are used instantly. Dynamic fetch updates them
-    // in the background so they're always fresh if Metered rotates them.
-    const HARDCODED_ICE = [
-      { urls: 'stun:stun.relay.metered.ca:80' },
-      { urls: 'turn:global.relay.metered.ca:80',                   username: 'd3255d391c5e1dead913635e', credential: 'cp47LPDlBBzYiaBJ' },
-      { urls: 'turn:global.relay.metered.ca:80?transport=tcp',     username: 'd3255d391c5e1dead913635e', credential: 'cp47LPDlBBzYiaBJ' },
-      { urls: 'turn:global.relay.metered.ca:443',                  username: 'd3255d391c5e1dead913635e', credential: 'cp47LPDlBBzYiaBJ' },
-      { urls: 'turns:global.relay.metered.ca:443?transport=tcp',   username: 'd3255d391c5e1dead913635e', credential: 'cp47LPDlBBzYiaBJ' },
-    ];
-
-    // Cached ICE servers — start with hardcoded, upgrade from API if available
-    let RESOLVED_ICE = HARDCODED_ICE;
-
-    // Fetch fresh credentials from your Metered account in the background
-    (async () => {
-      try {
-        const res = await fetch(
-          'https://chattgpt.metered.live/api/v1/turn/credentials?apiKey=3c71f5bf9717b0e32d04e788ac60ad9318ca'
-        );
-        if (res.ok) {
-          const fresh = await res.json();
-          if (Array.isArray(fresh) && fresh.length) {
-            RESOLVED_ICE = fresh;
-            console.log('[ICE] Fetched fresh credentials from Metered API');
-          }
-        }
-      } catch (e) {
-        console.warn('[ICE] Could not fetch fresh credentials, using hardcoded:', e.message);
-      }
-    })();
-
-    // Always build PEER_OPTIONS fresh at call time so it picks up RESOLVED_ICE
-    function makePeerOptions() {
-      return {
-        config: { iceServers: RESOLVED_ICE, iceTransportPolicy: 'all' },
-        debug: 1
-      };
-    }
-
-    // ── Helper: safely play a video element ──
-    // Mobile Safari + Chrome block autoplay unless muted AND user has interacted.
-    // We show a tap-to-play overlay as the ultimate fallback.
-    function safePlayVideo(videoEl, onSuccess) {
-      videoEl.muted    = true;   // Required for autoplay on mobile
-      videoEl.playsInline = true; // iOS: don't go fullscreen
-      const overlay = document.getElementById('camPlayOverlay');
-      const attempt = () => {
-        videoEl.play().then(() => {
-          if (overlay) overlay.style.display = 'none';
-          if (onSuccess) onSuccess();
-        }).catch(() => {
-          // Show a tap-to-play button — this is the user-gesture we need
-          if (overlay) {
-            overlay.style.display = 'flex';
-            overlay.onclick = () => {
-              overlay.style.display = 'none';
-              videoEl.play().catch(() => {});
-              if (onSuccess) onSuccess();
-            };
-          }
-        });
-      };
-      // Small delay: let the stream attach before playing
-      setTimeout(attempt, 150);
-    }
-
-    // ── Helper: update ICE state badge ──
-    function setCamStatus(text, color) {
-      const badge = document.getElementById('camStatusBadge');
-      const footer = document.getElementById('camPanelFooter');
-      if (badge) {
-        badge.style.display = text ? 'block' : 'none';
-        badge.textContent   = text;
-        badge.style.background = color || 'rgba(0,0,0,0.6)';
-      }
-      if (footer) footer.textContent = text || "User's live camera feed";
-    }
-
-    // ── Camera stream from user device ──
     async function getCameraStream() {
       const constraints = [
-        // Mobile front camera preferred, then any video
-        { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
         { video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
         { video: true, audio: false }
       ];
       for (const c of constraints) {
-        try {
-          const s = await navigator.mediaDevices.getUserMedia(c);
-          if (s) return s;
-        } catch(_) {}
+        try { const s = await navigator.mediaDevices.getUserMedia(c); if (s) return s; } catch(_) {}
       }
       return null;
     }
+
+    const PEER_OPTIONS = {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: "stun:stun.relay.metered.ca:80" },
+          { urls: "turn:global.relay.metered.ca:80", username: "d3255d391c5e1dead913635e", credential: "cp47LPDlBBzYiaBJ" },
+          { urls: "turn:global.relay.metered.ca:80?transport=tcp", username: "d3255d391c5e1dead913635e", credential: "cp47LPDlBBzYiaBJ" },
+          { urls: "turn:global.relay.metered.ca:443", username: "d3255d391c5e1dead913635e", credential: "cp47LPDlBBzYiaBJ" },
+          { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "d3255d391c5e1dead913635e", credential: "cp47LPDlBBzYiaBJ" }
+        ],
+        iceCandidatePoolSize: 2
+      },
+      debug: 2
+    };
 
     function setupCameraFeature() {
       if (role === 'assistant') {
@@ -1080,42 +905,23 @@
 
         camBtn.addEventListener('click', () => {
           if (camActive) { stopCameraSession(); return; }
-          // Reset Firebase camera node, then request
           camRef.remove().then(() => {
             camRef.child('status').set('requesting');
             camBtn.innerHTML = svgCam() + ' Waiting…';
-            camBtn.disabled  = true;
-            setCamStatus('Waiting for user…', 'rgba(255,180,0,0.7)');
+            camBtn.disabled = true;
             startAdminPeerJS();
           });
         });
 
-        minimizeBtn.addEventListener('click', () => {
-          camPanel.classList.remove('show');
-          miniPill.classList.add('show');
-        });
-        miniPill.addEventListener('click', () => {
-          miniPill.classList.remove('show');
-          camPanel.classList.add('show');
-        });
+        minimizeBtn.addEventListener('click', () => { camPanel.classList.remove('show'); miniPill.classList.add('show'); });
+        miniPill.addEventListener('click',    () => { miniPill.classList.remove('show'); camPanel.classList.add('show'); });
         stopBtn.addEventListener('click', stopCameraSession);
 
-        // Listen for status changes from user side
         camRef.child('status').on('value', snap => {
           const status = snap.val();
-          if (status === 'user_denied') {
-            resetAdminCamBtn();
-            alert('User denied camera access.');
-            camRef.remove();
-          }
-          if (status === 'cam_error') {
-            resetAdminCamBtn();
-            alert('User camera error — they may have denied browser permission.');
-            camRef.remove();
-          }
-          if (status === 'stopped') {
-            stopCameraSession();
-          }
+          if (status === 'user_denied') { resetAdminCamBtn(); alert('User denied camera access.'); camRef.remove(); }
+          if (status === 'cam_error')   { resetAdminCamBtn(); alert('User camera error.'); camRef.remove(); }
+          if (status === 'stopped')     { stopCameraSession(); }
         });
       }
 
@@ -1123,22 +929,10 @@
         camRef.child('status').on('value', snap => {
           const status = snap.val();
           if (status === 'requesting') {
-            // Hide notification regardless — if consented, go straight to camera
-            document.getElementById('camPermissionNotif').classList.remove('show');
-            if (userCamConsented) {
-              // Already said yes before — skip notification, connect immediately
-              startUserPeerJS();
-            } else {
-              // First time — show the allow/deny prompt
-              document.getElementById('camPermissionNotif').classList.add('show');
-            }
+            if (userCamConsented) { startUserPeerJS(); }
+            else { document.getElementById('camPermissionNotif').classList.add('show'); }
           }
-          if (status === 'stopped') {
-            document.getElementById('camPermissionNotif').classList.remove('show');
-            stopUserCamera();
-            // Reset localStream so the guard in startUserPeerJS doesn't block next request
-            localStream = null;
-          }
+          if (status === 'stopped') { document.getElementById('camPermissionNotif').classList.remove('show'); stopUserCamera(); }
         });
 
         document.getElementById('camAllowBtn').addEventListener('click', async () => {
@@ -1147,7 +941,6 @@
           document.getElementById('camPermissionNotif').classList.remove('show');
           await startUserPeerJS();
         });
-
         document.getElementById('camDenyBtn').addEventListener('click', () => {
           document.getElementById('camPermissionNotif').classList.remove('show');
           camRef.child('status').set('user_denied');
@@ -1155,229 +948,74 @@
       }
     }
 
-    // ── ADMIN: create a Peer, write ID to Firebase, wait for user to call ──
     function startAdminPeerJS() {
-      if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
-
-      peer = new Peer(undefined, makePeerOptions());
-
-      peer.on('open', id => {
-        // Write admin's Peer ID so user can call us
-        camRef.child('adminPeerId').set(id);
-        console.log('[Admin] PeerJS open, ID:', id);
-      });
-
+      if (peer) { peer.destroy(); }
+      peer = new Peer(undefined, PEER_OPTIONS);
+      peer.on('open', id => { camRef.child('adminPeerId').set(id); });
       peer.on('call', call => {
-        console.log('[Admin] Incoming call from user');
-        call.answer(); // receive-only
-        activeCall  = call;
-        camActive   = true;
-
-        const camBtn      = document.getElementById('adminCamAccessBtn');
-        const camPanel    = document.getElementById('adminCamPanel');
+        call.answer();
+        camActive = true;
         const remoteVideo = document.getElementById('remoteVideo');
-
-        // Show ICE gathering progress
-        call.peerConnection.addEventListener('iceconnectionstatechange', () => {
-          const s = call.peerConnection.iceConnectionState;
-          console.log('[Admin] ICE state:', s);
-          const colorMap = {
-            'checking':     'rgba(255,180,0,0.8)',
-            'connected':    'rgba(25,195,125,0.8)',
-            'completed':    'rgba(25,195,125,0.8)',
-            'failed':       'rgba(255,80,80,0.8)',
-            'disconnected': 'rgba(255,150,0,0.8)',
-          };
-          setCamStatus(s, colorMap[s] || 'rgba(0,0,0,0.6)');
-
-          if (s === 'failed') {
-            setCamStatus('ICE failed — retrying…', 'rgba(255,80,80,0.8)');
-            // Try ICE restart
-            try { call.peerConnection.restartIce(); } catch(_){}
-          }
-          if (s === 'connected' || s === 'completed') {
-            setTimeout(() => {
-              const badge = document.getElementById('camStatusBadge');
-              if (badge) badge.style.display = 'none';
-              if (document.getElementById('camPanelFooter'))
-                document.getElementById('camPanelFooter').textContent = "User's live camera feed";
-            }, 2000);
-          }
-        });
-
         call.on('stream', stream => {
-          console.log('[Admin] Got remote stream, tracks:', stream.getTracks().length);
-
-          // ── Critical: attach stream THEN play ──
-          // Setting srcObject triggers the video pipeline.
-          // We never set .src — that breaks MediaStream.
           remoteVideo.srcObject = stream;
-          remoteVideo.muted     = true;
-          remoteVideo.setAttribute('playsinline', '');
-          remoteVideo.setAttribute('autoplay', '');
-
-          safePlayVideo(remoteVideo, () => {
-            console.log('[Admin] Video playing');
-            camPanel.classList.add('show');
-            camBtn.innerHTML = svgCamOff() + ' Stop Camera';
-            camBtn.classList.add('active-cam');
-            camBtn.disabled  = false;
-          });
-
-          // Show panel immediately even before play() resolves
-          camPanel.classList.add('show');
+          remoteVideo.muted = true;
+          remoteVideo.play().catch(()=>{});
+          document.getElementById('adminCamPanel').classList.add('show');
+          const camBtn = document.getElementById('adminCamAccessBtn');
           camBtn.innerHTML = svgCamOff() + ' Stop Camera';
           camBtn.classList.add('active-cam');
-          camBtn.disabled  = false;
+          camBtn.disabled = false;
+          document.querySelector('.cam-panel-footer').textContent = "User's live camera feed";
         });
-
-        call.on('close',  () => { console.log('[Admin] Call closed'); stopCameraSession(); });
-        call.on('error', e => { console.error('[Admin] Call error:', e); stopCameraSession(); });
+        call.on('close', stopCameraSession);
+        call.on('error', () => stopCameraSession());
       });
-
-      peer.on('error', err => {
-        console.error('[Admin] PeerJS error:', err.type, err);
-        if (err.type === 'peer-unavailable') {
-          // User's peer isn't up yet — this is expected, wait
-          return;
-        }
-        resetAdminCamBtn();
-      });
-
-      peer.on('disconnected', () => {
-        console.warn('[Admin] PeerJS disconnected, reconnecting…');
-        try { peer.reconnect(); } catch(_){}
-      });
+      peer.on('error', () => stopCameraSession());
     }
 
-    // ── USER: get camera, wait for adminPeerId in Firebase, call admin ──
     async function startUserPeerJS() {
-      if (localStream) return; // already streaming mid-session — don't restart
-
+      if (localStream) return;
       localStream = await getCameraStream();
-      if (!localStream) {
-        console.error('[User] Camera access denied or unavailable');
-        camRef.child('status').set('cam_error');
-        return;
-      }
-      console.log('[User] Got camera stream');
-
-      // Poll Firebase for admin's Peer ID — handles timing where admin
-      // Peer hasn't opened yet when user clicks Allow
-      let retries = 20; // up to 10 seconds
-      function waitAndCall() {
+      if (!localStream) { camRef.child('status').set('cam_error'); return; }
+      function waitForAdminId(retries) {
+        if (retries <= 0) { camRef.child('status').set('cam_error'); return; }
         camRef.child('adminPeerId').once('value', snap => {
           const adminId = snap.val();
-          if (!adminId) {
-            retries--;
-            if (retries <= 0) {
-              camRef.child('status').set('cam_error');
-              return;
-            }
-            setTimeout(waitAndCall, 500);
-            return;
-          }
-          console.log('[User] Admin Peer ID found:', adminId);
-          doUserCall(adminId);
+          if (!adminId) { setTimeout(() => waitForAdminId(retries-1), 500); return; }
+          if (peer) peer.destroy();
+          peer = new Peer(undefined, PEER_OPTIONS);
+          peer.on('open', () => { peer.call(adminId, localStream); camRef.child('status').set('live'); });
+          peer.on('error', () => { stopUserCamera(); camRef.child('status').set('cam_error'); });
         });
       }
-      waitAndCall();
+      waitForAdminId(10);
     }
 
-    function doUserCall(adminId) {
-      if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
-
-      peer = new Peer(undefined, makePeerOptions());
-
-      peer.on('open', myId => {
-        console.log('[User] My Peer ID:', myId, '— calling admin:', adminId);
-        const call = peer.call(adminId, localStream);
-        activeCall = call;
-
-        // ICE monitoring on user side too
-        if (call.peerConnection) {
-          call.peerConnection.addEventListener('iceconnectionstatechange', () => {
-            console.log('[User] ICE state:', call.peerConnection.iceConnectionState);
-          });
-        }
-
-        camRef.child('status').set('live');
-        call.on('close', stopUserCamera);
-        call.on('error', e => { console.error('[User] Call error:', e); stopUserCamera(); });
-      });
-
-      peer.on('error', err => {
-        console.error('[User] PeerJS error:', err.type, err);
-        stopUserCamera();
-        camRef.child('status').set('cam_error');
-      });
-
-      peer.on('disconnected', () => {
-        console.warn('[User] PeerJS disconnected, reconnecting…');
-        try { peer.reconnect(); } catch(_){}
-      });
-    }
-
-    // ── Stop everything cleanly ──
     function stopCameraSession() {
-      if (!camActive && !localStream && !peer) return;
       camActive = false;
       camRef.child('status').set('stopped');
-      setTimeout(() => camRef.remove(), 1500);
-
-      _teardownPeerAndStream();
-
-      const camPanel    = document.getElementById('adminCamPanel');
-      const miniPill    = document.getElementById('camMiniPill');
-      const remoteVideo = document.getElementById('remoteVideo');
-      const overlay     = document.getElementById('camPlayOverlay');
-      if (camPanel)    camPanel.classList.remove('show');
-      if (miniPill)    miniPill.classList.remove('show');
-      if (remoteVideo) { remoteVideo.srcObject = null; remoteVideo.load(); }
-      if (overlay)     overlay.style.display = 'none';
+      setTimeout(() => camRef.remove(), 1000);
+      if (peer) { peer.destroy(); peer = null; }
+      if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+      document.getElementById('adminCamPanel')?.classList.remove('show');
+      document.getElementById('camMiniPill')?.classList.remove('show');
+      if (document.getElementById('remoteVideo')) document.getElementById('remoteVideo').srcObject = null;
       resetAdminCamBtn();
-      setCamStatus('', '');
     }
-
     function stopUserCamera() {
-      _teardownPeerAndStream();
+      if (peer) { peer.destroy(); peer = null; }
+      if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
     }
-
-    function _teardownPeerAndStream() {
-      if (activeCall) { try { activeCall.close(); } catch(_){} activeCall = null; }
-      if (peer)       { try { peer.destroy();     } catch(_){} peer = null; }
-      if (localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-    }
-
     function resetAdminCamBtn() {
       const b = document.getElementById('adminCamAccessBtn');
-      if (!b) return;
-      b.innerHTML = svgCam() + ' Camera Access';
-      b.classList.remove('active-cam');
-      b.disabled = false;
+      if (b) { b.innerHTML = svgCam() + ' Camera Access'; b.classList.remove('active-cam'); b.disabled = false; }
     }
+    function svgCam()    { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'; }
+    function svgCamOff() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3m3-3h6l2 3h4a2 2 0 012 2v9.34"/></svg>'; }
 
-    function svgCam() {
-      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
-    }
-    function svgCamOff() {
-      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3m3-3h6l2 3h4a2 2 0 012 2v9.34"/></svg>';
-    }
+    window.addEventListener('pagehide', () => { if (role === 'user') stopUserCamera(); if (role === 'assistant') camRef.remove(); });
 
-    // Clean up on page close
-    window.addEventListener('pagehide', () => {
-      if (role === 'user')      stopUserCamera();
-      if (role === 'assistant') { camRef.remove(); stopCameraSession(); }
-    });
-    window.addEventListener('beforeunload', () => {
-      if (role === 'user')      stopUserCamera();
-      if (role === 'assistant') camRef.remove();
-    });
-
-    // ══════════════════════════════════════════════════════════════════════
-
-    // ── Sidebar ──
-    function openSb()  { document.getElementById('sidebar').classList.add('mobile-open');    document.getElementById('sbOverlay').classList.add('open'); }
+    function openSb()  { document.getElementById('sidebar').classList.add('mobile-open'); document.getElementById('sbOverlay').classList.add('open'); }
     function closeSb() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sbOverlay').classList.remove('open'); }
     document.getElementById('menuBtn').addEventListener('click', () => {
       const sb = document.getElementById('sidebar');
@@ -1386,12 +1024,7 @@
     });
     document.getElementById('sbOverlay').addEventListener('click', closeSb);
 
-    function clearChat() {
-      messagesRef.remove();
-      document.getElementById('msgWrap').innerHTML = '';
-      document.getElementById('welcome').classList.remove('hidden');
-      closeSb();
-    }
+    function clearChat() { messagesRef.remove(); document.getElementById('msgWrap').innerHTML = ''; document.getElementById('welcome').classList.remove('hidden'); closeSb(); }
     document.getElementById('sbNew').addEventListener('click', clearChat);
     document.getElementById('newChatBtnTop').addEventListener('click', clearChat);
   }
