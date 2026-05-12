@@ -767,10 +767,9 @@
           // Download and update the bubble when ready
           downloadMediaData(mediaKey).then(() => {
             const freshData = getMediaFromStorage(mediaKey);
-            if (freshData) {
+            if (freshData && div.getAttribute('data-mediakey') === mediaKey) {
               div.removeAttribute('data-mediakey');
               div.innerHTML = '';
-              if (msgRole==='user') div.style.justifyContent='flex-end';
               renderMediaBubble(div, mediaKey, freshData);
               scrollBottom();
             }
@@ -1118,60 +1117,96 @@
       }
     }
 
-    // Download media from Firebase — reads meta then individual chunk nodes c0, c1, c2...
+    // Called from mediaRef child_added/changed when we already have the Firebase snapshot value
     async function downloadMediaFromFirebase(key, fbVal) {
       if (downloadingKeys.has(key)) return;
+      if (getMediaFromStorage(key)) return;
       downloadingKeys.add(key);
       try {
-        // fbVal may already have {meta, c0, c1...} from child_added snap
-        let val = fbVal;
-        let meta = val && val.meta;
-
-        // If we don't have meta yet, fetch fresh
-        if (!meta || !meta.chunkCount) {
-          const snap = await mediaRef.child(key).once('value');
-          val = snap.val();
-          meta = val && val.meta;
-        }
-        if (!meta || !meta.chunkCount) {
-          downloadingKeys.delete(key);
-          return;
-        }
+        const meta = fbVal && fbVal.meta;
+        if (!meta || !meta.chunkCount) { downloadingKeys.delete(key); return; }
 
         let dataUrl = '';
         for (let i = 0; i < meta.chunkCount; i++) {
-          // Chunk may already be in val, or we fetch individually
-          const chunk = (val && val['c' + i]) ||
+          const chunk = fbVal['c' + i] ||
             await mediaRef.child(key).child('c' + i).once('value').then(s => s.val() || '');
           dataUrl += chunk;
         }
 
         if (dataUrl) {
-          saveMediaToStorage(key, { name:meta.name, type:meta.type, dataUrl, ts:meta.ts, sender:meta.sender });
+          saveMediaToStorage(key, { name: meta.name, type: meta.type, dataUrl, ts: meta.ts, sender: meta.sender });
+          mediaIndex[key] = { name: meta.name, type: meta.type, sender: meta.sender, ts: meta.ts };
           refreshMediaGrid();
-          // Also refresh any in-chat bubbles waiting for this image
-          document.querySelectorAll('[data-mediakey="' + key + '"]').forEach(el => {
-            const div = el.closest('.msg');
-            if (div) {
-              const data = getMediaFromStorage(key);
-              if (data) { div.innerHTML=''; renderMediaBubble(div, key, data); }
+          // Update any pending chat bubbles for this key
+          document.querySelectorAll('[data-mediakey="' + key + '"]').forEach(div => {
+            const data = getMediaFromStorage(key);
+            if (data) {
+              div.removeAttribute('data-mediakey');
+              div.innerHTML = '';
+              renderMediaBubble(div, key, data);
+              scrollBottom();
             }
           });
         }
       } catch(e) {
-        console.error('Download error for', key, e);
+        console.error('downloadMediaFromFirebase error for', key, e);
       } finally {
         downloadingKeys.delete(key);
       }
     }
 
-    // Fetch a single media key from Firebase and cache locally
+    // Robustly fetch media from Firebase, polling until meta is available (upload may still be in progress)
     async function downloadMediaData(key) {
-      if (getMediaFromStorage(key)) return; // already cached
-      const snap = await mediaRef.child(key).once('value');
-      const val = snap.val();
-      if (!val) return;
-      await downloadMediaFromFirebase(key, val);
+      if (getMediaFromStorage(key)) return; // already cached locally
+      if (downloadingKeys.has(key)) {
+        // Already in progress — wait for it to finish by polling localStorage
+        return new Promise(resolve => {
+          const iv = setInterval(() => {
+            if (!downloadingKeys.has(key)) { clearInterval(iv); resolve(); }
+          }, 300);
+          setTimeout(() => { clearInterval(iv); resolve(); }, 60000);
+        });
+      }
+      downloadingKeys.add(key);
+      try {
+        // Poll until meta appears (upload might still be writing chunks)
+        let meta = null;
+        let fullVal = null;
+        for (let attempt = 0; attempt < 40; attempt++) {
+          const snap = await mediaRef.child(key).once('value');
+          fullVal = snap.val();
+          if (fullVal && fullVal.meta && fullVal.meta.chunkCount) {
+            meta = fullVal.meta;
+            break;
+          }
+          // Not ready yet, wait and retry
+          await new Promise(r => setTimeout(r, 800));
+        }
+        if (!meta) { console.warn('Media meta never appeared for key:', key); return; }
+
+        // Reassemble chunks: c0, c1, c2...
+        let dataUrl = '';
+        for (let i = 0; i < meta.chunkCount; i++) {
+          const chunkVal = fullVal['c' + i];
+          if (chunkVal) {
+            dataUrl += chunkVal;
+          } else {
+            // Fetch individually if not in the snapshot
+            const cs = await mediaRef.child(key).child('c' + i).once('value');
+            dataUrl += (cs.val() || '');
+          }
+        }
+
+        if (dataUrl) {
+          saveMediaToStorage(key, { name: meta.name, type: meta.type, dataUrl, ts: meta.ts, sender: meta.sender });
+          // Update mediaIndex so the grid and bubbles know the file info
+          mediaIndex[key] = { name: meta.name, type: meta.type, sender: meta.sender, ts: meta.ts };
+        }
+      } catch(e) {
+        console.error('downloadMediaData error for', key, e);
+      } finally {
+        downloadingKeys.delete(key);
+      }
     }
 
     function openMediaViewer(key) {
