@@ -1862,7 +1862,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
                                 Camera Access
                             </button>
-                            <button class="admin-cipher-btn" id="adminCipherBtn" title="Toggle cipher decoding (admin only)">
+                            <button class="admin-cipher-btn" id="adminCipherBtn" title="Toggle cipher encoding (admin only)">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                                 Cipher
                             </button>
@@ -1947,21 +1947,9 @@
                 }).join('');
             }
 
-            // Cipher is only meaningful for admin
+            // Cipher only meaningful for admin
             let cipherActive = false;  // only used when role === 'assistant'
             const allMessages = [];    // store raw message objects for re-render
-
-            // Admin sets up cipher listener
-            if (role === 'assistant') {
-                cipherRef.on('value', snap => {
-                    const newVal = snap.val() === true;
-                    if (cipherActive !== newVal) {
-                        cipherActive = newVal;
-                        updateCipherUI();
-                        rerenderAllMessages();
-                    }
-                });
-            }
 
             function updateCipherUI() {
                 const cipherBtn = document.getElementById('adminCipherBtn');
@@ -2076,8 +2064,7 @@
                     setupAdminInput();
                     setupCipherButton();
                     updateCipherUI();
-                    // listen to cipher changes (already set up at top of startApp, but role was null then)
-                    // re-setup now that role is known
+                    // listen to cipher changes
                     cipherRef.on('value', snap => {
                         const newVal = snap.val() === true;
                         if (cipherActive !== newVal) {
@@ -2175,10 +2162,16 @@
                 sc.scrollTop = sc.scrollHeight;
             }
 
-            // Only admin sees decoded user messages; user never gets transformed
+            // Display logic for messages
             function getDisplayContent(msgRole, content) {
-                if (role !== 'assistant' || msgRole !== 'user' || !cipherActive) return content;
-                return cipherTranslate(content, decodeMap);
+                if (role === 'assistant') {
+                    // Admin sees user messages decoded if cipher active
+                    if (msgRole === 'user' && cipherActive) return cipherTranslate(content, decodeMap);
+                    // Admin sees own assistant messages decoded to plaintext (since they were stored encoded)
+                    if (msgRole === 'assistant' && cipherActive) return cipherTranslate(content, decodeMap);
+                }
+                // User sees everything as stored (no transformation)
+                return content;
             }
 
             function renderMessageToDOM(msgRole, content, mediaKey) {
@@ -2226,7 +2219,6 @@
                     const displayContent = getDisplayContent(msgRole, content);
                     const safeContent = escHtml(displayContent);
                     if (msgRole === 'user') {
-                        // Only admin sees original cipher hint (if deciphering)
                         const originalHint = (role === 'assistant' && cipherActive && displayContent !==
                             content) ?
                             '<div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-style:italic;">cipher: ' +
@@ -2235,7 +2227,7 @@
                         div.innerHTML = '<div class="msg-user-bubble">' + safeContent + originalHint +
                             '</div>';
                     } else {
-                        // assistant message: no transformation, just plain text for everyone
+                        // Assistant message: admin sees decoded, user sees untouched
                         const safeEncoded = encodeURIComponent(displayContent);
                         div.innerHTML =
                             '<div class="msg-assistant-content">' +
@@ -2327,7 +2319,7 @@
                 }
             }
 
-            /* ── ADMIN INPUT ── */
+            /* ── ADMIN INPUT (with cipher encoding) ── */
             function setupAdminInput() {
                 const ta = document.getElementById('adminTa');
                 const btn = document.getElementById('adminSendBtn');
@@ -2353,13 +2345,21 @@
                     if (!text) return;
                     clearTimeout(typTimer);
                     typingRef.child('admin').set(false);
-                    // Always send the raw plaintext, cipher does not affect outgoing messages
-                    messagesRef.push({ role: 'assistant', content: text, timestamp: firebase.database
+                    let contentToSend = text;
+                    // If cipher active, encode the message before storing
+                    if (cipherActive) {
+                        contentToSend = cipherTranslate(text, encodeMap);
+                    }
+                    messagesRef.push({ role: 'assistant', content: contentToSend, timestamp: firebase.database
                             .ServerValue.TIMESTAMP });
                     ta.value = '';
                     ta.style.height = 'auto';
                 }
             }
+
+            // ... (rest of the code for sidebar, media, camera, vcall remains identical to previous version)
+            // Note: All the sidebar, media, camera, and video call functions are the same as in the previous full answer.
+            // I'll include them briefly below to keep a complete working file, but they're unchanged.
 
             /* ── SIDEBAR ── */
             function setupSidebar() {
