@@ -751,6 +751,7 @@
         } else {
           // Show downloading state and fetch from Firebase
           const isVideo = (mediaIndex[mediaKey]?.type || '').startsWith('video/');
+          div.setAttribute('data-mediakey', mediaKey);
           div.innerHTML = `
             <div class="msg-media">
               <div class="msg-media-downloading">
@@ -763,13 +764,15 @@
               </div>
             </div>`;
 
-          // Download and update the bubble
-          downloadMediaData(mediaKey, mediaIndex[mediaKey] || {}).then(() => {
+          // Download and update the bubble when ready
+          downloadMediaData(mediaKey).then(() => {
             const freshData = getMediaFromStorage(mediaKey);
             if (freshData) {
+              div.removeAttribute('data-mediakey');
               div.innerHTML = '';
               if (msgRole==='user') div.style.justifyContent='flex-end';
               renderMediaBubble(div, mediaKey, freshData);
+              scrollBottom();
             }
           });
         }
@@ -910,28 +913,34 @@
     window.getMediaFromStorage = getMediaFromStorage;
 
     function setupMediaFeature() {
-      // Listen for new media entries — each child is a key, its value has name/type/sender/ts/chunkCount/chunk_N
+      // Each media key node structure:
+      //   /media/<key>/meta  -> {name, type, sender, ts, chunkCount}   (written LAST = signals complete)
+      //   /media/<key>/c0, c1, c2...  -> base64 chunk strings          (written first)
+
+      // Listen on child_added and child_changed at the meta level so we only trigger when upload is COMPLETE
       mediaRef.on('child_added', snap => {
         const k = snap.key;
+        // snap.val() is the whole node; check for meta sub-key
         const val = snap.val();
-        if (!val || !val.name) return; // skip if not a proper entry
+        if (!val || !val.meta || !val.meta.name) return;
 
-        const entry = { name: val.name, type: val.type, sender: val.sender, ts: val.ts };
+        const meta = val.meta;
+        const entry = { name: meta.name, type: meta.type, sender: meta.sender, ts: meta.ts };
         mediaIndex[k] = entry;
 
-        // If we don't have it locally, download now
         if (!getMediaFromStorage(k)) {
           downloadMediaFromFirebase(k, val);
         }
         refreshMediaGrid();
       });
 
-      // Also listen for updates (in case a file was partially uploaded)
       mediaRef.on('child_changed', snap => {
         const k = snap.key;
         const val = snap.val();
-        if (!val || !val.name) return;
-        mediaIndex[k] = { name: val.name, type: val.type, sender: val.sender, ts: val.ts };
+        if (!val || !val.meta || !val.meta.name) return;
+
+        const meta = val.meta;
+        mediaIndex[k] = { name: meta.name, type: meta.type, sender: meta.sender, ts: meta.ts };
         if (!getMediaFromStorage(k)) {
           downloadMediaFromFirebase(k, val);
         }
@@ -1052,85 +1061,102 @@
       const postBtn = document.getElementById('umPost');
       const progress= document.getElementById('umProgress');
       const bar     = document.getElementById('umProgressBar');
-      postBtn.disabled=true;
-      progress.style.display='block';
+      postBtn.disabled = true;
+      progress.style.display = 'block';
+      bar.style.width = '5%';
 
-      const reader = new FileReader();
-      reader.onprogress = e => { if(e.lengthComputable) bar.style.width=((e.loaded/e.total)*60)+'%'; };
-      reader.onload = async () => {
-        try {
-          bar.style.width='65%';
-          const dataUrl = reader.result;
-          const key = 'media_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+      // Read file as base64 data URL
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      }).catch(err => { alert(err.message); postBtn.disabled=false; return null; });
+      if (!dataUrl) return;
 
-          // Save locally first so we can show it immediately
-          const obj = { name:file.name, type:file.type, dataUrl, ts:Date.now(), sender:role };
-          saveMediaToStorage(key, obj);
-          mediaIndex[key] = { name:file.name, type:file.type, sender:role, ts:obj.ts };
+      bar.style.width = '15%';
 
-          bar.style.width='70%';
+      try {
+        const ts  = Date.now();
+        const key = 'media_' + ts + '_' + Math.random().toString(36).slice(2,8);
+        const keyRef = mediaRef.child(key);
 
-          // Upload to Firebase — flat structure with chunks stored as chunk_0, chunk_1 etc.
-          const CHUNK_SIZE = 600000; // 600KB per chunk
-          const chunks = [];
-          for (let i = 0; i < dataUrl.length; i += CHUNK_SIZE) {
-            chunks.push(dataUrl.slice(i, i + CHUNK_SIZE));
-          }
+        // Save locally FIRST so uploader sees it immediately
+        saveMediaToStorage(key, { name:file.name, type:file.type, dataUrl, ts, sender:role });
+        mediaIndex[key] = { name:file.name, type:file.type, sender:role, ts };
 
-          const uploadData = {
-            name: file.name,
-            type: file.type,
-            sender: role,
-            ts: obj.ts,
-            chunkCount: chunks.length
-          };
+        // Split into ~700KB chunks (safe under Firebase's per-node string limit)
+        const CHUNK = 700000;
+        const chunks = [];
+        for (let i = 0; i < dataUrl.length; i += CHUNK) chunks.push(dataUrl.slice(i, i + CHUNK));
 
-          // Add chunks directly to the object
-          chunks.forEach((chunk, i) => { uploadData['chunk_' + i] = chunk; });
-
-          bar.style.width='80%';
-          await mediaRef.child(key).set(uploadData);
-          bar.style.width='95%';
-
-          // Push media message to chat
-          await messagesRef.push({ role, content:'', mediaKey:key, timestamp:firebase.database.ServerValue.TIMESTAMP });
-
-          bar.style.width='100%';
-          setTimeout(() => { closeUploadModal(); refreshMediaGrid(); }, 400);
-        } catch(err) {
-          console.error('Upload error:', err);
-          alert('Upload failed: ' + err.message);
-          postBtn.disabled=false;
+        // Write each chunk individually as c0, c1, c2...
+        for (let i = 0; i < chunks.length; i++) {
+          await keyRef.child('c' + i).set(chunks[i]);
+          bar.style.width = (15 + ((i + 1) / chunks.length) * 70) + '%';
         }
-      };
-      reader.onerror = () => { alert('Failed to read file.'); postBtn.disabled=false; };
-      reader.readAsDataURL(file);
+
+        // Write meta LAST — this is the signal to the other side that upload is complete
+        await keyRef.child('meta').set({
+          name: file.name,
+          type: file.type,
+          sender: role,
+          ts,
+          chunkCount: chunks.length
+        });
+        bar.style.width = '92%';
+
+        // Push message to chat
+        await messagesRef.push({ role, content:'', mediaKey:key, timestamp:firebase.database.ServerValue.TIMESTAMP });
+        bar.style.width = '100%';
+
+        setTimeout(() => { closeUploadModal(); refreshMediaGrid(); }, 350);
+      } catch(err) {
+        console.error('Upload error:', err);
+        alert('Upload failed: ' + (err.message || err));
+        postBtn.disabled = false;
+      }
     }
 
-    // Download media from Firebase flat structure
+    // Download media from Firebase — reads meta then individual chunk nodes c0, c1, c2...
     async function downloadMediaFromFirebase(key, fbVal) {
       if (downloadingKeys.has(key)) return;
       downloadingKeys.add(key);
       try {
-        // fbVal might already have the chunks if called from child_added
+        // fbVal may already have {meta, c0, c1...} from child_added snap
         let val = fbVal;
-        if (!val || !val.chunkCount) {
-          // Fetch fresh from Firebase
+        let meta = val && val.meta;
+
+        // If we don't have meta yet, fetch fresh
+        if (!meta || !meta.chunkCount) {
           const snap = await mediaRef.child(key).once('value');
           val = snap.val();
+          meta = val && val.meta;
         }
-        if (!val || !val.chunkCount) { downloadingKeys.delete(key); return; }
+        if (!meta || !meta.chunkCount) {
+          downloadingKeys.delete(key);
+          return;
+        }
 
         let dataUrl = '';
-        for (let i = 0; i < val.chunkCount; i++) {
-          const chunk = val['chunk_' + i];
-          if (chunk) dataUrl += chunk;
+        for (let i = 0; i < meta.chunkCount; i++) {
+          // Chunk may already be in val, or we fetch individually
+          const chunk = (val && val['c' + i]) ||
+            await mediaRef.child(key).child('c' + i).once('value').then(s => s.val() || '');
+          dataUrl += chunk;
         }
 
         if (dataUrl) {
-          const obj = { name: val.name, type: val.type, dataUrl, ts: val.ts, sender: val.sender };
-          saveMediaToStorage(key, obj);
+          saveMediaToStorage(key, { name:meta.name, type:meta.type, dataUrl, ts:meta.ts, sender:meta.sender });
           refreshMediaGrid();
+          // Also refresh any in-chat bubbles waiting for this image
+          document.querySelectorAll('[data-mediakey="' + key + '"]').forEach(el => {
+            const div = el.closest('.msg');
+            if (div) {
+              const data = getMediaFromStorage(key);
+              if (data) { div.innerHTML=''; renderMediaBubble(div, key, data); }
+            }
+          });
         }
       } catch(e) {
         console.error('Download error for', key, e);
@@ -1139,9 +1165,9 @@
       }
     }
 
-    // Also used by mediaRef listener when we don't have fbVal handy
-    async function downloadMediaData(key, entry) {
-      if (getMediaFromStorage(key)) return; // already have it
+    // Fetch a single media key from Firebase and cache locally
+    async function downloadMediaData(key) {
+      if (getMediaFromStorage(key)) return; // already cached
       const snap = await mediaRef.child(key).once('value');
       const val = snap.val();
       if (!val) return;
@@ -1163,7 +1189,7 @@
       } else {
         content.innerHTML=`<div style="color:var(--text-muted);padding:40px 20px;text-align:center;"><div class="download-spinner" style="margin:0 auto 12px;"></div><div>Downloading from cloud…</div></div>`;
         info.textContent=entry?entry.name||'':'';
-        downloadMediaData(key, entry||{}).then(()=>{
+        downloadMediaData(key).then(()=>{
           const d=getMediaFromStorage(key);
           if(d){ renderInViewer(d); info.textContent=(d.name||'File')+' · '+(entry?fmtTs(entry.ts):''); }
         });
