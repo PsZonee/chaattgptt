@@ -384,7 +384,7 @@
         const ADMIN_PASS = "PRA(SAM)26";
         let role = null;
 
-        // ── Cipher map (single map — applied identically to the OTHER person's messages) ──
+        // ── Cipher map — applied only to admin messages at send time ──
         const encodeMap = {
             a:'p',b:'m',c:'t',d:'g',e:'n',f:'r',g:'i',h:'c',i:'o',j:'y',
             k:'z',l:'q',m:'d',n:'l',o:'s',p:'u',q:'w',r:'e',s:'h',t:'v',
@@ -398,6 +398,28 @@
                 if (mapped) return ch === ch.toUpperCase() ? mapped.toUpperCase() : mapped;
                 return ch;
             }).join('');
+        }
+
+        // ── URL detection ──
+        const URL_REGEX = /(https?:\/\/[^\s<>"']+)/gi;
+
+        // Cipher only the text parts — URLs stay readable.
+        function cipherMessageText(rawText) {
+            const parts = [];
+            let lastIndex = 0;
+            let match;
+            URL_REGEX.lastIndex = 0;
+            while ((match = URL_REGEX.exec(rawText)) !== null) {
+                if (match.index > lastIndex) {
+                    parts.push({ type: 'text', value: rawText.slice(lastIndex, match.index) });
+                }
+                parts.push({ type: 'url', value: match[0] });
+                lastIndex = match.index + match[0].length;
+            }
+            if (lastIndex < rawText.length) {
+                parts.push({ type: 'text', value: rawText.slice(lastIndex) });
+            }
+            return parts.map(p => p.type === 'url' ? p.value : cipherTranslate(p.value, encodeMap)).join('');
         }
 
         // ── Audio ──
@@ -475,8 +497,7 @@
             setInterval(deleteExpiredMessages, 60 * 1000);
         }
 
-        // ── URL & image detection ──
-        const URL_REGEX = /(https?:\/\/[^\s<>"']+)/gi;
+        // ── Image detection ──
         const IMAGE_HOST_REGEX = /(media\.giphy\.com|c\.tenor\.com|media\.tenor\.com|i\.imgur\.com|i\.redd\.it|pbs\.twimg\.com|media\d*\.giphy\.com)/i;
         const IMAGE_EXT_REGEX  = /\.(gif|png|jpe?g|webp|avif|bmp|svg)(\?|#|$)/i;
 
@@ -492,16 +513,15 @@
                             .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
         }
 
-        // URLs are never ciphered — only plain text around them gets ciphered.
-        function renderRichTextWithCipher(rawText, cipherMap) {
+        function renderRichText(text) {
             const parts = [];
             let lastIndex = 0;
             let match;
             URL_REGEX.lastIndex = 0;
 
-            while ((match = URL_REGEX.exec(rawText)) !== null) {
+            while ((match = URL_REGEX.exec(text)) !== null) {
                 if (match.index > lastIndex) {
-                    parts.push({ type: 'text', value: rawText.slice(lastIndex, match.index) });
+                    parts.push({ type: 'text', value: text.slice(lastIndex, match.index) });
                 }
                 let url = match[0];
                 let suffix = '';
@@ -514,15 +534,12 @@
                 if (suffix) parts.push({ type: 'text', value: suffix });
                 lastIndex = match.index + match[0].length;
             }
-            if (lastIndex < rawText.length) {
-                parts.push({ type: 'text', value: rawText.slice(lastIndex) });
+            if (lastIndex < text.length) {
+                parts.push({ type: 'text', value: text.slice(lastIndex) });
             }
 
             return parts.map(p => {
-                if (p.type === 'text') {
-                    const transformed = cipherMap ? cipherTranslate(p.value, cipherMap) : p.value;
-                    return escHtml(transformed);
-                }
+                if (p.type === 'text') return escHtml(p.value);
                 const safe = escAttr(p.value);
                 if (isImageUrl(p.value)) {
                     return '<a class="msg-media-link" href="' + safe + '" target="_blank" rel="noopener noreferrer">' +
@@ -544,23 +561,12 @@
             const div  = document.createElement('div');
             div.className = 'msg ' + msgRole;
 
-            const currentRole = role;
-            // ═════════════════════════════════════════════════════════════
-            //  SAME CIPHER ON BOTH SIDES:
-            //  Any message that isn't YOURS is shown with encodeMap applied.
-            //  No decoding, no "translation" — just plain cipher text.
-            // ═════════════════════════════════════════════════════════════
-            let cipherMap = null;
-            if (msgRole !== currentRole) cipherMap = encodeMap;
-
-            const richHtml = renderRichTextWithCipher(content, cipherMap);
-            const displayContent = cipherMap ? cipherTranslate(content, cipherMap) : content;
+            const richHtml = renderRichText(content);
 
             if (msgRole === 'user') {
-                // No cipher hint anymore — just the ciphered text
                 div.innerHTML = '<div class="msg-user-bubble">' + richHtml + '</div>';
             } else {
-                const safePlain = encodeURIComponent(displayContent);
+                const safePlain = encodeURIComponent(content);
                 div.innerHTML =
                     '<div class="msg-assistant-content">' +
                         '<div class="msg-assistant-text">' + richHtml + '</div>' +
@@ -793,7 +799,7 @@
             });
         }
 
-        // ── User input ──
+        // ── User input — messages stay PLAIN ──
         function setupUserInput() {
             const ta  = document.getElementById('userTa');
             const btn = document.getElementById('sendBtn');
@@ -816,16 +822,22 @@
             btn.addEventListener('click', doSend);
 
             function doSend() {
-                const text = ta.value.trim();
-                if (!text) return;
+                const plain = ta.value.trim();
+                if (!plain) return;
                 clearTimeout(typTimer);
                 typingRef.child('user').set(false);
-                messagesRef.push({ role: 'user', content: text, timestamp: firebase.database.ServerValue.TIMESTAMP });
+
+                // User messages stay plain
+                messagesRef.push({
+                    role: 'user',
+                    content: plain,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
                 ta.value = ''; ta.style.height = 'auto'; btn.disabled = true;
             }
         }
 
-        // ── Admin input ──
+        // ── Admin input — messages are CIPHERED at send ──
         function setupAdminInput() {
             const ta  = document.getElementById('adminTa');
             const btn = document.getElementById('adminSendBtn');
@@ -847,11 +859,19 @@
             btn.addEventListener('click', doSend);
 
             function doSend() {
-                const text = ta.value.trim();
-                if (!text) return;
+                const plain = ta.value.trim();
+                if (!plain) return;
                 clearTimeout(typTimer);
                 typingRef.child('admin').set(false);
-                messagesRef.push({ role: 'assistant', content: text, timestamp: firebase.database.ServerValue.TIMESTAMP });
+
+                // Admin messages get ciphered before saving
+                const encrypted = cipherMessageText(plain);
+
+                messagesRef.push({
+                    role: 'assistant',
+                    content: encrypted,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
                 ta.value = ''; ta.style.height = 'auto';
             }
         }
