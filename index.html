@@ -17,7 +17,6 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
 
-        /* Login */
         #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 24px; }
         .login-card { width: 100%; max-width: 360px; text-align: center; }
         .login-logo { width: 48px; height: 48px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
@@ -29,7 +28,6 @@
         .login-btn { width: 100%; padding: 14px; background: var(--text); color: #000; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
         .login-error { color: #ff6b6b; font-size: 13px; margin-top: 10px; }
 
-        /* Sidebar */
         .sidebar { width: 260px; background: var(--sidebar-bg); display: flex; flex-direction: column; flex-shrink: 0; height: 100dvh; transition: width 0.25s ease; }
         .sidebar.collapsed { width: 0; overflow: hidden; }
         .sb-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 6px; }
@@ -46,7 +44,6 @@
         .sb-footer-btn:hover { background: var(--surface); }
         .sb-avatar { width: 32px; height: 32px; border-radius: 50%; background: #7c7c7c; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0; }
 
-        /* Main */
         .main-content { flex: 1; display: flex; flex-direction: column; height: 100dvh; min-width: 0; }
         .topbar { display: flex; align-items: center; padding: 0 12px; height: 52px; gap: 4px; flex-shrink: 0; }
         .tb-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 8px; }
@@ -60,7 +57,6 @@
         .tb-share { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; cursor: pointer; background: none; }
         .tb-share:hover { background: var(--surface); }
 
-        /* Chat */
         .chat-scroll { flex: 1; overflow-y: auto; }
         .welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; padding: 24px 20px 0; text-align: center; }
         .welcome.hidden { display: none; }
@@ -71,7 +67,6 @@
         .suggestion-card .sc-title { font-size: 14px; font-weight: 500; color: var(--text); }
         .suggestion-card .sc-sub { font-size: 13px; color: var(--text-muted); }
 
-        /* Messages */
         .messages-wrap { padding: 8px 0 24px; max-width: 768px; margin: 0 auto; width: 100%; }
         .msg { padding: 4px 24px; animation: msgIn 0.18s ease; }
         @keyframes msgIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
@@ -86,13 +81,11 @@
         .act-btn:hover { background: var(--surface); color: var(--text); }
         .act-btn svg { width: 16px; height: 16px; }
 
-        /* Inline media */
         .msg-media { display: block; max-width: 100%; max-height: 320px; border-radius: 14px; margin-top: 6px; object-fit: contain; background: #000; }
         .msg-media-link { display: inline-block; max-width: 100%; }
         .msg-user-bubble .msg-media { margin-top: 8px; }
         .msg-link { color: var(--accent2); text-decoration: underline; word-break: break-all; }
 
-        /* Input */
         .input-wrap { padding: 12px 16px 16px; flex-shrink: 0; }
         .input-container { max-width: 768px; margin: 0 auto; }
         .input-box { background: var(--surface); border-radius: 18px; border: 1px solid var(--border); }
@@ -109,7 +102,6 @@
         .input-spacer { flex: 1; }
         .input-footer-text { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
 
-        /* Admin bar */
         .admin-bar { display: none; padding: 12px 16px 16px; flex-shrink: 0; }
         .admin-bar.active { display: block; }
         .admin-container { max-width: 768px; margin: 0 auto; }
@@ -118,7 +110,6 @@
         .admin-ta::placeholder { color: var(--text-muted); }
         .admin-label { text-align: center; font-size: 12px; color: var(--accent); margin-top: 5px; font-weight: 500; }
 
-        /* Typing */
         .typing-bar { height: 0; overflow: hidden; transition: height 0.2s ease; display: flex; align-items: center; padding: 0 20px; gap: 8px; font-size: 13px; color: var(--text-muted); max-width: 768px; margin: 0 auto; width: 100%; flex-shrink: 0; }
         .typing-bar.show { height: 28px; }
         .tdots { display: flex; gap: 4px; align-items: center; }
@@ -127,7 +118,6 @@
         .tdots span:nth-child(3) { animation-delay: 0.3s; }
         @keyframes tdot { 0%,60%,100% { transform:translateY(0); opacity:0.35; } 30% { transform:translateY(-5px); opacity:1; } }
 
-        /* ── Giphy picker modal ── */
         #gifModal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; padding: 16px; }
         #gifModal.show { display: flex; }
         .gif-modal-card { background: var(--surface); border-radius: 16px; padding: 16px; max-width: 520px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; border: 1px solid var(--border); }
@@ -154,7 +144,6 @@
         .gif-powered a:hover { color: var(--text); }
         @media (max-width: 480px) { .gif-grid { grid-template-columns: repeat(2, 1fr); } }
 
-        /* Mobile sidebar overlay */
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: none; }
         .sidebar-overlay.open { display: block; }
 
@@ -171,7 +160,6 @@
 </head>
 <body>
 
-<!-- Login -->
 <div id="loginOverlay">
     <div class="login-card">
         <div class="login-logo">
@@ -187,7 +175,6 @@
     </div>
 </div>
 
-<!-- Giphy picker modal -->
 <div id="gifModal">
     <div class="gif-modal-card">
         <div class="gif-modal-header">
@@ -205,7 +192,6 @@
     </div>
 </div>
 
-<!-- App -->
 <div id="app" style="display:none; flex-direction:row; height:100dvh;">
     <div class="sidebar-overlay" id="sbOverlay"></div>
 
@@ -375,7 +361,6 @@
     }
 
     function startApp() {
-        // ── FIREBASE CONFIG ──
         const firebaseConfig = {
             apiKey: "AIzaSyBk2_lWNU_WP5HDycJPJSWi6i9vxlHDYX0",
             authDomain: "chattu-c8d2a.firebaseapp.com",
@@ -399,12 +384,7 @@
         const ADMIN_PASS = "PRA(SAM)26";
         let role = null;
 
-        // ── Cipher maps ──
-        const decodeMap = {
-            p:'a',m:'b',t:'c',g:'d',n:'e',r:'f',i:'g',c:'h',o:'i',y:'j',
-            z:'k',q:'l',d:'m',l:'n',s:'o',u:'p',w:'q',e:'r',h:'s',v:'t',
-            a:'u',x:'v',f:'w',j:'x',b:'y',k:'z'
-        };
+        // ── Cipher map (single map — applied identically to the OTHER person's messages) ──
         const encodeMap = {
             a:'p',b:'m',c:'t',d:'g',e:'n',f:'r',g:'i',h:'c',i:'o',j:'y',
             k:'z',l:'q',m:'d',n:'l',o:'s',p:'u',q:'w',r:'e',s:'h',t:'v',
@@ -512,10 +492,7 @@
                             .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        //  URLs are NEVER ciphered — only plain text around them gets
-        //  ciphered. GIFs render identically on both sides.
-        // ═══════════════════════════════════════════════════════════════
+        // URLs are never ciphered — only plain text around them gets ciphered.
         function renderRichTextWithCipher(rawText, cipherMap) {
             const parts = [];
             let lastIndex = 0;
@@ -568,18 +545,20 @@
             div.className = 'msg ' + msgRole;
 
             const currentRole = role;
+            // ═════════════════════════════════════════════════════════════
+            //  SAME CIPHER ON BOTH SIDES:
+            //  Any message that isn't YOURS is shown with encodeMap applied.
+            //  No decoding, no "translation" — just plain cipher text.
+            // ═════════════════════════════════════════════════════════════
             let cipherMap = null;
-            if (msgRole === 'user' && currentRole === 'assistant') cipherMap = decodeMap;
-            else if (msgRole === 'assistant' && currentRole === 'user') cipherMap = encodeMap;
+            if (msgRole !== currentRole) cipherMap = encodeMap;
 
             const richHtml = renderRichTextWithCipher(content, cipherMap);
             const displayContent = cipherMap ? cipherTranslate(content, cipherMap) : content;
 
             if (msgRole === 'user') {
-                const originalHint = (role === 'assistant' && displayContent !== content)
-                    ? '<div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-style:italic;">cipher: ' + escHtml(content) + '</div>'
-                    : '';
-                div.innerHTML = '<div class="msg-user-bubble">' + richHtml + originalHint + '</div>';
+                // No cipher hint anymore — just the ciphered text
+                div.innerHTML = '<div class="msg-user-bubble">' + richHtml + '</div>';
             } else {
                 const safePlain = encodeURIComponent(displayContent);
                 div.innerHTML =
@@ -618,9 +597,7 @@
             scrollBottom();
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        //  GIPHY PICKER — search + trending, click to insert
-        // ═══════════════════════════════════════════════════════════════
+        // ── GIPHY PICKER ──
         const GIPHY_API_KEY = 'PkL7dungBl4pMsnMANc6ZsxTH5DeGWKO';
         const GIPHY_BASE    = 'https://api.giphy.com/v1/gifs';
 
@@ -654,21 +631,12 @@
             if (e.key === 'Escape' && gifModal.classList.contains('show')) closeGifModal();
         });
 
-        function gifShowStatus(html) {
-            gifGrid.innerHTML = '<div class="gif-status">' + html + '</div>';
-        }
-        function gifShowLoading() {
-            gifShowStatus('<div class="gif-spinner"></div><div>Loading GIFs…</div>');
-        }
-        function gifShowError(msg) {
-            gifShowStatus('❌ ' + msg);
-        }
+        function gifShowStatus(html) { gifGrid.innerHTML = '<div class="gif-status">' + html + '</div>'; }
+        function gifShowLoading() { gifShowStatus('<div class="gif-spinner"></div><div>Loading GIFs…</div>'); }
+        function gifShowError(msg) { gifShowStatus('❌ ' + msg); }
 
         function gifRenderResults(items) {
-            if (!items || !items.length) {
-                gifShowStatus('No GIFs found. Try another search.');
-                return;
-            }
+            if (!items || !items.length) { gifShowStatus('No GIFs found. Try another search.'); return; }
             gifGrid.innerHTML = '';
             items.forEach(gif => {
                 const thumb = (gif.images && gif.images.fixed_height_small) ? gif.images.fixed_height_small.url
@@ -684,9 +652,7 @@
                 tile.className = 'gif-item';
                 tile.title = gif.title || 'GIF';
                 const img = document.createElement('img');
-                img.src = thumb;
-                img.alt = gif.title || 'gif';
-                img.loading = 'lazy';
+                img.src = thumb; img.alt = gif.title || 'gif'; img.loading = 'lazy';
                 tile.appendChild(img);
                 tile.addEventListener('click', () => insertGif(full));
                 gifGrid.appendChild(tile);
@@ -700,10 +666,7 @@
                 if (!res.ok) throw new Error('Giphy ' + res.status);
                 const json = await res.json();
                 gifRenderResults(json.data);
-            } catch (err) {
-                console.error(err);
-                gifShowError('Could not load trending GIFs. Check your internet.');
-            }
+            } catch (err) { console.error(err); gifShowError('Could not load trending GIFs. Check your internet.'); }
         }
 
         async function searchGiphy(query) {
@@ -715,20 +678,14 @@
                 if (!res.ok) throw new Error('Giphy ' + res.status);
                 const json = await res.json();
                 gifRenderResults(json.data);
-            } catch (err) {
-                console.error(err);
-                gifShowError('Search failed. Try again.');
-            }
+            } catch (err) { console.error(err); gifShowError('Search failed. Try again.'); }
         }
 
         gifSearchIn.addEventListener('input', () => {
             const q = gifSearchIn.value.trim();
             clearTimeout(gifSearchTimer);
             if (!q) {
-                if (currentGifQuery !== '') {
-                    currentGifQuery = '';
-                    loadGiphyTrending();
-                }
+                if (currentGifQuery !== '') { currentGifQuery = ''; loadGiphyTrending(); }
                 return;
             }
             gifSearchTimer = setTimeout(() => {
@@ -863,11 +820,7 @@
                 if (!text) return;
                 clearTimeout(typTimer);
                 typingRef.child('user').set(false);
-                messagesRef.push({
-                    role: 'user',
-                    content: text,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
+                messagesRef.push({ role: 'user', content: text, timestamp: firebase.database.ServerValue.TIMESTAMP });
                 ta.value = ''; ta.style.height = 'auto'; btn.disabled = true;
             }
         }
@@ -898,11 +851,7 @@
                 if (!text) return;
                 clearTimeout(typTimer);
                 typingRef.child('admin').set(false);
-                messagesRef.push({
-                    role: 'assistant',
-                    content: text,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
+                messagesRef.push({ role: 'assistant', content: text, timestamp: firebase.database.ServerValue.TIMESTAMP });
                 ta.value = ''; ta.style.height = 'auto';
             }
         }
